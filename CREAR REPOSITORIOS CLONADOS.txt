@@ -1,0 +1,27 @@
+gDescargar un git hub
+
+# Copia la URL del repositorio desde GitHub (por ejemplo, https://github.com/usuario/original-repo.git)
+
+# Abre tu terminal y ejecuta el comando de clonación
+git clone https://github.com/usuario/original-repo.git
+
+# Navega al directorio del repositorio clonado
+cd original-repo
+
+# Verifica que estás en el repositorio correcto
+git remote -v
+
+Paso 1. Creamos el Repositorio en Git Hub
+
+git init
+git add .
+git commit -m "Mi tarea"
+Opcion 1. git remote add origin/master  https://github.com/JSEFERINO/Asignaturas.git
+Opcion 2. git remote add origin/main  https://github.com/JSEFERINO/Asignaturas.git
+Opción 1. git push origin/master master
+Opción 2. git push origin/main main
+
+
+Una IA es una herramienta de conocimiento cientifico de acceso libre a todo publicocd
+
+jhurtado@102517lp MINGW64 ~/Downloads/SERIES_DE_TIEMPO/STIMES/Time-Series-Analysis-and-Forecasting-with-Python (master)
