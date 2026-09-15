@@ -1,0 +1,870 @@
+
+
+#####<-========== PASO 1.=========->
+
+
+---
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+    code_folding: show
+    df_print: paged
+    css: styles.css
+  pdf_document:
+    toc: true
+    number_sections: true
+    highlight: tango
+  word_document:
+    toc: true
+    number_sections: true
+---
+
+
+
+```{r setup, include=FALSE}
+library(vembedr)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹
+
+
+#####<-========== PASO 2.=========->
+
+📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊
+
+# [**MI CURSO DE ESTADÍSTICA Y PROBABILIDAD - 2026**]{style="color:blueviolet"}
+
+
+
+🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯
+
+## [**SEMANA 7. Mi página Web en Estadistica**]{style="color:red"}
+
+📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊
+
+## [**Clase N° 28. AQUI COMIENZA EL LABORATORIO 7**]{style="color:blueviolet"}
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 3. =========->
+
+### [**(i)**]{style="color:red"}[**Datos**]{style="color:blue"}
+
+```{r}
+library(readxl)
+DATOS2026 <- read_excel("datos/DATOS2026.xlsx")
+DATOS2026
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 4. =========->
+
+
+### [**(2i)**]{style="color:red"}[**Usando la aplicación para hacer la tabla**]{style="color:blue"}
+
+```{r}
+table_sexo<-table(DATOS2026$SEXO)
+table_sexo
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 5.=========->
+
+
+### [**(3i)**]{style="color:red"}[**Gráfico de torta para SEXO**]{style="color:blue"}
+
+
+```{r}
+pie_1<-pie(table_sexo, col=c("lightblue","pink"),
+        main="Estudio de Pastel.\n Distribución por sexos.", labels = table_sexo)
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 6. =========->
+
+
+### [**(4i)**]{style="color:red"}[**Construimos el diagrama de barras y el diagrama de Pastel para esta variable cualitativa**]{style="color:blue"}
+
+```{r}
+barp<-barplot(table_sexo, col = rainbow(5), border = "darkred",main = "Gráfico de Barras",sub = "UTB",xlab = "SEXO", ylab = "Conteo")
+text(barp, table_sexo-30, labels = table_sexo)
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 7. =========->
+
+
+
+#### [**(5i)**]{style="color:red"}[**Usando la aplicación para hacer la tabla porcentual redondeando al entero mas cercano**]{style="color:blue"}
+
+```{r}
+table_sexo2<-round(table(DATOS2026$SEXO)/121*100)
+table_sexo2
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 8. =========->
+
+
+
+### [**(6i)**]{style="color:red"}[**Construimos el diagrama de barras % y da pastel para esta variable cualitativa**]{style="color:blue"}
+
+```{r}
+barp2<-barplot(table_sexo2, col = rainbow(5), border = "darkred",main = "Gráfico de Barras",sub = "UTB",xlab = "SEXO", ylab = "Porcentaje")
+text(barp2, table_sexo2-30, labels = table_sexo2)
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 9. =========->
+
+
+### [**(7i)**]{style="color:red"}[**Las tablas de frecuencias y las representaciones gráficas son dos maneras equivalentes de presentar la información. Las dos exponen ordenadamente la información recogida en una muestra**]{style="color:blue"}
+
+
+```{r}
+pie_1<-pie(table_sexo2, col=c("lightblue","pink"),
+        main="Estudio de Pastel.\n Distribución por sexos.", labels = table_sexo2)
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 10. =========->
+
+
+### [**(8i)**]{style="color:red"}[**Usando la aplicación para hacer la tabla con dos varibles SEXO y CURSO**]{style="color:blue"}
+
+```{r}
+table_3<-table(DATOS2026$SEXO, DATOS2026$CURSO)
+table_3
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 11. =========->
+
+### [**(9i)**]{style="color:red"}[**Usando la aplicación para hacer el gráfico con dos varibles SEXO y CURSO**]{style="color:blue"}
+
+```{r}
+barp3<-barplot(table_3,
+        main = "Gráfico de barras CURSO vs SEXO",
+        xlab = "CURSO", ylab = "Frecuencia",
+        col = c("pink", "blue"),
+        legend.text = rownames(table_3),
+        beside = TRUE) # Barras agrupadas
+text(barp3, table_3-5, labels = table_3)
+```
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 12. =========->
+
+
+### [**(10i)**]{style="color:red"}[**Usando la aplicación para hacer la tabla con dos varibles SEXO y CURSO pero usando las frecuencias relativas aproximadas**]{style="color:blue"}
+
+```{r}
+table_4<-round(table(DATOS2026$SEXO, DATOS2026$CURSO)/74*100)
+table_4
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 13. =========->
+
+
+### [**(11i)**]{style="color:red"}[**Usando la aplicación para hacer el gráfico con dos varibles SEXO y CURSO pero usando las frecuencias relativas aproximadas**]{style="color:blue"}
+
+```{r}
+barp4<-barplot(table_4,
+        main = "Gráfico de barras CURSO vs SEXO en porcentajes",
+        xlab = "CURSO", ylab = "Frecuencia",
+        col = c("pink", "blue"),
+        legend.text = rownames(table_4),
+        beside = TRUE) # Barras agrupadas
+text(barp4, table_4-5, labels = table_4)
+```
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 14. =========->
+
+
+### [**(12i)**]{style="color:red"}[**Usando la aplicación para hacer la tabla con dos varibles SEXO y CURSO**]{style="color:blue"}
+
+```{r}
+table_5<-table(DATOS2026$ESTRATO, DATOS2026$CURSO)
+table_5
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 15. =========->
+
+
+
+### [**(13i)**]{style="color:red"}[**Usando la aplicación para hacer el gráfico con dos varibles SEXO y CURSO**]{style="color:blue"}
+
+```{r}
+barp3<-barplot(table_5,
+        main = "Gráfico de barras CURSO vs ESTRATO",
+        xlab = "CURSO", ylab = "Frecuencia",
+        col = rainbow(5),
+        legend.text = rownames(table_5),
+        beside = TRUE) # Barras agrupadas
+text(barp3, table_5-1, labels = table_3)
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 16. =========->
+
+
+### [**(14i)**]{style="color:red"}[**Usando la aplicación para hacer la tabla con dos varibles SEXO y CURSO**]{style="color:blue"}
+
+```{r}
+table_6<-table(DATOS2026$ESTRATO, DATOS2026$SEXO)
+table_6
+```
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 17. =========->
+
+
+### [**(15i)**]{style="color:red"}[**Usando la aplicación para hacer el gráfico con dos varibles SEXO y CURSO**]{style="color:blue"}
+
+```{r}
+barp3<-barplot(table_6,
+        main = "Gráfico de barras CURSO vs ESTRATO",
+        xlab = "CURSO", ylab = "Frecuencia",
+        col = rainbow(5),
+        legend.text = rownames(table_6),
+        beside = TRUE) # Barras agrupadas
+text(barp3, table_6-1, labels = table_6)
+```
+
+🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+#####<-========== PASO 18. =========->
+
+
+
+### [**(16i)**]{style="color:red"}[**Tabla de Frecuencias Usando el paquete summarytools: observamos ya una tabla mas completa**]{style="color:blue"}
+
+```{r}
+library(summarytools)
+tabla_8 <- freq(DATOS2026$EDAD)
+tabla_8
+```
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+#####<-========== PASO 19. =========->
+
+
+### [**(17i)**]{style="color:red"}[**Tabla de Frecuencias Usando el paquete summarytools: observamos ya una tabla mas completa**]{style="color:blue"}
+
+```{r}
+library(summarytools)
+summary(DATOS2026$EDAD)
+
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+#####<-========== PASO 20. =========->
+
+
+### [**(18i)**]{style="color:red"}[**Una primera vista del diagrama de caja para la variable Edad**]{style="color:blue"}
+
+```{r}
+boxplot(DATOS2026$EDAD, horizontal = TRUE, col = rainbow(3))
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+#####<-========== PASO 21. =========->
+
+### [**(19i)**]{style="color:red"}[**Identificamos donde queda la mediana**]{style="color:blue"}
+
+```{r}
+x = DATOS2026$EDAD
+boxplot(x, notch = TRUE, horizontal = TRUE, col = rainbow(3))
+```
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+#####<-========== PASO 22. =========->
+
+
+### [**(20i)**]{style="color:red"}[**EDAD vs SEXO**]{style="color:blue"}
+
+```{r}
+x = DATOS2026$EDAD
+y = DATOS2026$SEXO
+boxplot(x~y, horizontal = TRUE, col = rainbow(3))
+```
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+#####<-========== PASO 23. =========->
+
+### [**(21i)**]{style="color:red"}[**EDAD vs ESTRATO**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+x = DATOS2026$EDAD
+z = DATOS2026$ESTRATO
+boxplot(x~z, horizontal = TRUE, col = rainbow(3))
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 24. =========->
+
+
+### [**(22i)**]{style="color:red"}[**EDAD vs ESTRATO vs SEXO**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+ggplot(data= DATOS2026,mapping= aes(y=EDAD,x = ESTRATO, fill=SEXO))+geom_boxplot()+
+  scale_y_continuous(name = "EDAD") +
+  scale_x_discrete(labels = abbreviate, name = "ESTRATO")
+
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 25. =========->
+
+### [**(23i)**]{style="color:red"}[**Estudiemos la variable ESTATURA y obtengamos sus seis medidas representativas**]{style="color:blue"}
+
+```{r}
+summary(DATOS2026$ESTATURA)
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 26. =========->
+
+#### [**(24i)**]{style="color:red"}[**Una primera vista del diagrama de caja para la variable ESTATURA**]{style="color:blue"}
+
+```{r}
+boxplot(DATOS2026$ESTATURA, horizontal = TRUE, col = rainbow(3))
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 27. =========->
+
+#### [**(25i)**]{style="color:red"}[**Identificamos donde queda la mediana**]{style="color:blue"}
+
+```{r}
+x = DATOS2026$ESTATURA
+boxplot(x, notch = TRUE, horizontal = TRUE, col = rainbow(3))
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 28. =========->
+
+#### [**(26i)**]{style="color:red"}[**EDAD vs SEXO**]{style="color:blue"}
+
+```{r}
+x = DATOS2026$ESTATURA
+y = DATOS2026$SEXO
+boxplot(x~y, horizontal = TRUE, col = rainbow(3))
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 29. =========->
+
+
+#### [**(27)**]{style="color:red"}[**EDAD vs ESTRATO**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+x = DATOS2026$ESTATURA
+z = DATOS2026$ESTRATO
+boxplot(x~z, horizontal = TRUE, col = rainbow(3))
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 30. =========->
+
+### [**(28i)**]{style="color:red"}[**ESTATURA vs ESTRATO vs SEXO**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+ggplot(data= DATOS2026,mapping= aes(y=ESTATURA,x = ESTRATO, fill=SEXO))+geom_boxplot()+
+  scale_y_continuous(name = "ESTATURA") +
+  scale_x_discrete(labels = abbreviate, name = "ESTRATO")
+
+```
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 31. =========->
+
+
+### **(29i)[Histograma y tabla de frecuencias usando *Regla de Sturges*]{style="color:red"}**
+
+##### Usando la libreria "agricolae"
+
+```{r}
+library(agricolae)
+h2<-graph.freq(DATOS2026$EDAD, col=colors()[75]) #[86]
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 32. =========->
+
+
+### **(30i)[Tabla de fecuencias agrupadas *Regla de Sturges*]{style="color:red"}**
+
+##### Usando la libreria "agricolae"
+
+```{r}
+summary(h2)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 33. =========->
+
+
+#### [**(31i)**]{style="color:red"}[**Polígono de frecuencia absolutas**]{style="color:blue"}
+
+###### frequency : counts (1) and relative (2)
+
+```{r}
+plot(h2,  col=colors()[70], frequency = 1)
+polygon.freq(h2, col = "red", frequency = 1, lwd = 2)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 34. =========->
+
+
+### [**(32i)**]{style="color:red"}[**Polígono de frecuencia relativas**]{style="color:blue"}
+
+###### frequency : counts (1) and relative (2)
+
+```{r}
+plot(h2,  col=colors()[70], frequency = 2)
+polygon.freq(h2, col = "red", frequency = 2, lwd = 2)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 35. =========->
+
+
+### **(33i)[Ojivas - usando R]{style="color:red"}**
+
+```{r}
+fr_por_clase2<-h2$counts
+fr_por_clase2
+total_n2<-sum(h2$counts)
+total_n2
+fr_relativos2<-fr_por_clase2/total_n2
+fr_porcentuales2<-100*fr_relativos2
+fr_porcentuales2
+cumsum(fr_por_clase2)
+cumsum(fr_relativos2)
+cumsum(fr_porcentuales2)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 36. =========->
+
+## **(34i)[Ojivas - frecuencias porcentuales]{style="color:red"}**
+
+```{r}
+p4<-cumsum(fr_porcentuales2)
+plot(p4, col = "red")
+lines(p4, col = "red")
+
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== AQUI FINALIZA EL LABORATORIO 7. =========->
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== AQUI INICIA EL LABORATORIO 8. VARIABLES RELACIONADAS=========->
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+
+####<-========== PASO 37. =========->
+
+
+### [**(35i)**]{style="color:red"}[**Algunas tablas bivariadas - Contamos Sexo vs Curso -ambas cualitativas**]{style="color:blue"}
+
+```{r}
+table_bv1<-table(DATOS2026$SEXO, DATOS2026$CURSO)
+table_bv1
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 38. =========->
+
+
+### [**(36i)**]{style="color:red"}[**Algunas tablas bivariadas - Diagrama de barras Contamos Sexo vs Curso**]{style="color:blue"}
+
+```{r}
+barp_bv1<-barplot(table_bv1,
+        main = "Gráfico de barras CURSO vs SEXO",
+        xlab = "CURSO", ylab = "Frecuencia",
+        col = c("pink", "blue"),
+        legend.text = rownames(table_bv1),
+        beside = TRUE) # Barras agrupadas
+text(barp_bv1, table_bv1-5, labels = table_bv1)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 39. =========->
+
+
+### [**(37i)**]{style="color:red"}[**Algunas tablas bivariadas - Diagrama de barras Contamos Estrato vs Curso**]{style="color:blue"}
+
+```{r}
+table_bv2<-table(DATOS2026$ESTRATO, DATOS2026$CURSO)
+table_bv2
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 40. =========->
+
+```{r}
+barp_bv2<-barplot(table_bv2,
+        main = "Gráfico de barras CURSO vs ESTRATO",
+        xlab = "CURSO", ylab = "Frecuencia",
+        col = rainbow(5),
+        legend.text = rownames(table_bv2),
+        beside = TRUE) # Barras agrupadas
+text(barp_bv2, table_bv2-1, labels = table_bv2)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 41. =========->
+### [**(38i)**]{style="color:red"}[**Una variable cualitativa y la otra cuantitativa: es necesario un boxplot**]{style="color:blue"}
+
+```{r}
+x = DATOS2026$EDAD
+y = DATOS2026$SEXO
+boxplot(x~y, horizontal = TRUE, col = rainbow(3))
+```
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 42. =========->
+
+### [**(39i)**]{style="color:red"}[**Una variable cualitativa y la otra cuantitativa: es necesario un boxplot**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+x = DATOS2026$EDAD
+z = DATOS2026$ESTRATO
+boxplot(x~z, horizontal = TRUE, xlab = "EDAD", ylab = "ESTRATOS", col = rainbow(3))
+```
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 43. =========->
+
+### [**(40i)**]{style="color:red"}[**Una variable cualitativa y la otra cuantitativa: es necesario un boxplot**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+x = DATOS2026$ESTATURA
+z = DATOS2026$SEXO
+boxplot(x~z, horizontal = TRUE, xlab = "ESTATURA", ylab = "SEXO", col = rainbow(3))
+```
+
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 43. =========->
+
+
+
+### [**(41i)**]{style="color:red"}[**Dos variables cuantitativas: es necesario un diagrama de dispersión**]{style="color:blue"}
+
+```{r}
+library(ggplot2)
+x = DATOS2026$ESTATURA
+y = DATOS2026$PESO
+plot(x,y,  xlab = "ESTATURA", ylab = "PESO", col = rainbow(3))
+#dibujar una línea punteada vertical en el valor medio
+mean(x)
+mean(y)
+abline (v = mean (x), lwd = 3, lty = 2)
+ #dibujar una línea punteada horizontal en el valor medio
+abline (h = mean (y), lwd = 3, lty = 2)
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 44. =========->
+
+
+
+```{r}
+mean(x)
+mean(y)
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 45. =========->
+
+
+### [**(42i)**]{style="color:red"}[**Recta de regresión lineal Simple**]{style="color:blue"}
+
+
+
+```{r}
+regresion1 = lm(y~x, data=DATOS2026)
+regresion1
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 47. =========->
+
+
+### [**(43i)**]{style="color:red"}[**Recta de regresión lineal Simple2**]{style="color:blue"}
+
+
+
+```{r}
+regresion2 = lm(x~y, data=DATOS2026)
+regresion2
+```
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 48. =========->
+
+
+### [**(45i)**]{style="color:red"}[**Recta de regresión lineal Simple**]{style="color:blue"}
+
+#### **Haciendo uso de RStudio con la función summary.**
+
+```{r}
+summary(regresion2)
+```
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 48. =========->
+
+
+## **46i** [**Diagrama de Dispersión y lineal de regresión**]{style="color:green"}
+
+```{r}
+library(ggplot2)
+x = DATOS2026$ESTATURA
+y = DATOS2026$PESO
+plot(x,y,  xlab = "ESTATURA", ylab = "PESO", col = rainbow(3), main = "y_ajus= a + bx = -13.2018+0.4552x, r= 0.4352732")
+#dibujar una línea punteada vertical en el valor medio
+abline (v = mean (x), lwd = 3, lty = 2)
+ #dibujar una línea punteada horizontal en el valor medio
+abline (h = mean (y), lwd = 3, lty = 2)
+
+#ajustar un modelo de regresión lineal a los datos
+ regresion1 <- lm (y ~ x, data = DATOS2026)
+
+#definir los valores de intersección y pendiente
+ a <- -13.20178 #Intercepto 
+b <- 0.4552 # pendiente
+
+#agregue la línea de regresión ajustada al diagrama de dispersión
+ abline (a = a, b = b, col = "steelblue")
+```
+
+
+🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯
+
+
+🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 49. =========->
+
+
+### [**Problema de aplicación:**]{style="color:red"}[**En la siguiente base de datos se encuentran consignados los pesos y estaturas de 50 estudiantes seleccionados al azar de un grupo de Estudiantes de Estadística I de la UTB.Complete el siguiente formulario de preguntas:**]{style="color:blue"}
+
+### [**(a)**]{style="color:red"}[**Datos**]{style="color:blue"}
+
+```{r}
+taller_rl <- data.frame (x = c (88, 77, 68, 80, 68, 55, 89, 61, 72, 72, 79, 75, 68, 65, 70, 52, 78, 55, 96, 75, 44, 57, 60, 50, 93), y = c (175, 183, 158, 165, 175, 160, 160, 156, 174, 171, 160, 184, 163, 176, 167, 172, 168, 167, 181, 175, 153, 154, 169, 168, 187))
+
+```
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 50. =========->
+
+### [**(b)**]{style="color:red"}[**Diagrama de dispersión**]{style="color:blue"}
+
+```{r}
+plot(taller_rl$x,taller_rl$y,  xlab = "PESO", ylab = "ESTATURA", col = rainbow(3))
+#dibujar una línea punteada vertical en el valor medio
+mean(taller_rl$x)
+mean(taller_rl$y)
+abline (v = mean (taller_rl$x), lwd = 3, lty = 2)
+ #dibujar una línea punteada horizontal en el valor medio
+abline (h = mean (taller_rl$y), lwd = 3, lty = 2)
+```
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 51. =========->
+
+### [**(51i)**]{style="color:red"}[**Coeficiente de Correlación de Pearson**]{style="color:blue"}
+
+```{r}
+cor(taller_rl$x,taller_rl$y)
+```
+
+### **Se concluye que existe una cierta relación lineal entre La estatura y el Peso**:
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 52. =========->
+
+
+### [**(d)**]{style="color:red"}[**Recta de regresión lineal Simple**]{style="color:blue"}
+
+
+```{r}
+regresion3 = lm(taller_rl$y~taller_rl$x, data=taller_rl)
+regresion3
+```
+
+
+### [**(e)**]{style="color:red"}[**Recta de regresión lineal Simple**]{style="color:blue"}
+
+#### **Haciendo uso de RStudio con la función summary.**
+
+```{r}
+summary(regresion3)
+```
+
+```{r}
+plot(taller_rl$x,taller_rl$y,  xlab = "PESO", ylab = "ESTATURA", col = rainbow(3))
+#dibujar una línea punteada vertical en el valor medio
+mean(taller_rl$x)
+mean(taller_rl$y)
+abline (v = mean (taller_rl$x), lwd = 3, lty = 2)
+ #dibujar una línea punteada horizontal en el valor medio
+
+abline (h = mean (taller_rl$y), lwd = 3, lty = 2)
+
+#ajustar un modelo de regresión lineal a los datos
+ regresion3 = lm(taller_rl$y~taller_rl$x, data=taller_rl)
+
+#definir los valores de intersección y pendiente
+ a <- 143.9296 #Intercepto 
+b <- 0.3565 # pendiente
+
+#agregue la línea de regresión ajustada al diagrama de dispersión
+ abline (a = a, b = b, col = "steelblue")
+```
+
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 52. =========->
+
+### [**(52i)**]{style="color:red"}[**Los datos del fichero EdadPesoGrasas.txt corresponden a tres variables medidas en 25 individuos: edad, peso y cantidad de grasas en sangre. Para leer el fichero de datos y saber los nombres de las variables:**]{style="color:blue"}
+
+```{r}
+grasas <- read.table('http://verso.mat.uam.es/~joser.berrendero/datos/EdadPesoGrasas.txt', header = TRUE)
+names(grasas)
+```
+
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 53. =========->
+
+### [**(53i)**]{style="color:red"}[**una matriz de diagramas de dispersión**]{style="color:blue"}
+
+```{r}
+pairs(grasas)
+```
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 54. =========->
+
+### [**(54i)**]{style="color:red"}[**una matriz de correlacion**]{style="color:blue"}
+
+```{r}
+cor(grasas)
+
+```
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 55. =========->
+
+### [**(55i)**]{style="color:red"}[**Cálculo y representacion de la recta de mínimos cuadrados**]{style="color:blue"}
+
+```{r}
+regresion <- lm(grasas ~ edad, data = grasas)
+summary(regresion)
+```
+
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 56. =========->
+
+### [**(56i)**]{style="color:red"}[**representación gráfica de la recta de mínimos cuadrados**]{style="color:blue"}
+
+```{r}
+plot(grasas$edad, grasas$grasas, xlab='Edad', ylab='Grasas')
+abline(regresion)
+
+```
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-========== PASO 57. =========->
+
+### [**(57i)**]{style="color:red"}[**Supongamos que queremos utilizar la recta de mínimos cuadrados para predecir la cantidad de grasas para individuos de edades 31,31,32,…,50**]{style="color:blue"}
+
+```{r}
+
+nuevas.edades <- data.frame(edad = seq(30, 50))
+predict(regresion, nuevas.edades)
+```
+
+🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈🌈🧪🌟💻✨🧠📈🔬⚗️📚💻🌈🧪🌟💻✨🧠📈
+
+####<-==========AQUI FINALIZA EL LABORATORIO 8 =========->
