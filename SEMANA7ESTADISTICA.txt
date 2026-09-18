@@ -1,0 +1,768 @@
+================================================================================
+CURSO DE CIENCIA DE DATOS - 202620
+CUADERNO DE EJERCICIOS EN PYTHON Y R
+================================================================================
+
+Autor     : (Escribe tu nombre completo)
+Email     : (Escribe tu email)
+Celular   : (Escribe tu celular)
+Código    : (Escribe tu código estudiantil)
+
+--------------------------------------------------------------------------------
+ÍNDICE DE SECCIONES
+--------------------------------------------------------------------------------
+
+1.  Base de Datos 1
+2.  Medidas de Tendencia Central
+3.  Medidas de Variabilidad
+4.  Medidas de Posición
+5.  Diagrama de Caja y Bigotes
+6.  Tabla de frecuencias
+7.  Histogramas
+8.  Anotando gráficas
+9.  Gráficas de barras
+10. Tablas de contingencia
+11. Graficando con múltiples axis
+12. Boxplots y Violinplots
+13. Coeficiente de correlación de Pearson
+14. Matriz de correlaciones y mapas de calor
+15. Gráficas de dispersión
+16. Pairplots: Relación entre múltiples variables
+17. Regresión Lineal Simple
+18. Bootstrap
+19. Error estándar e intervalos de confianza
+20. Dataset de entrenamiento y de prueba
+21. Validación cruzada
+22. Scatterplots por categorías
+23. Scatterplots con variables condicionantes
+24. Binnings Hexagonales
+25. Gráficas de barras apiladas
+26-35. Secciones adicionales (A)
+
+================================================================================
+LIBRERÍAS PARA TRABAJAR EN PYTHON
+================================================================================
+
+from scipy import stats
+import pandas as pd
+import numpy as np
+
+================================================================================
+LIBRERÍAS PARA TRABAJAR EN R (desde Python vía rpy2)
+================================================================================
+
+# @title Librerias para Trabajar en R
+import rpy2.rinterface_lib.callbacks as rcb
+import logging
+
+# Desactivar warnings de R en Python
+rcb.logger.setLevel(logging.ERROR)  # Solo muestra errores, no warnings
+%load_ext rpy2.ipython
+
+================================================================================
+1. BASE DE DATOS 1
+================================================================================
+
+A. Cargar Base de datos desde una URL en Python
+--------------------------------------------------------------------------------
+df = pd.read_csv('https://raw.githubusercontent.com/JSEFERINO/Curso_Estadistica/refs/heads/main/00.%20DATOS202460ULTIMOS2.csv', delimiter=";")
+df.head()
+
+B. Cargar Base de datos desde una URL en R
+--------------------------------------------------------------------------------
+%%R
+library(readr)
+
+url <- "https://raw.githubusercontent.com/JSEFERINO/Curso_Estadistica/refs/heads/main/00.%20DATOS202460ULTIMOS2.csv"
+
+df_R <- read_csv2(url)   # read_csv2 usa ";" como separador por defecto
+head(df_R)
+
+Estructura del dataset:
+- Filas: 74
+- Columnas: 16
+- Variables: CURSO, ASISTENCIA2, ASISTENCIA1, PARCIAL 1, PARCIAL 2,
+  NRC, PROGRAMA, EDAD, PESO, ESTATURA, SEXO, ESTADO_CIVIL,
+  ESTRATO, URBANO, TRANSPORTE, GR_SANGUINEO
+
+================================================================================
+2. MEDIDAS DE TENDENCIA CENTRAL
+================================================================================
+
+A. Medidas de Tendencia Central en Python
+--------------------------------------------------------------------------------
+df['PESO'].mean()                    # Media
+df['PESO'].median()                  # Mediana
+df['PESO'].mode()                    # Moda
+stats.trim_mean(df['PESO'], 0.1)     # Media truncada
+
+print(f"Medidas de Tendencia Central")
+print(f"Media: {df['PESO'].mean()}")
+print(f"Mediana: {df['PESO'].median()}")
+print(f"Moda: {df['PESO'].mode()[0]}")
+print(f"Media truncada: {stats.trim_mean(df['PESO'], 0.1)}")
+
+Resultados esperados:
+- Media: 63.3243
+- Mediana: 62.0
+- Moda: 60
+- Media truncada: 62.5667
+
+B. Medidas de Tendencia Central en R
+--------------------------------------------------------------------------------
+%%R
+# Media
+mean(df$PESO)
+
+# Mediana
+median(df$PESO)
+
+# Moda (función personalizada)
+moda <- function(x, na.rm = FALSE) {
+  if (na.rm) x <- x[!is.na(x)]
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+moda(df$PESO)
+
+# Media truncada (10% por cada lado)
+mean(df$PESO, trim = 0.1)
+
+cat("Medidas de Tendencia Central\n")
+cat("Media: ", mean(df$PESO), "\n")
+cat("Mediana: ", median(df$PESO), "\n")
+cat("Moda: ", moda(df$PESO), "\n")
+cat("Media truncada: ", mean(df$PESO, trim = 0.1), "\n")
+
+================================================================================
+3. MEDIDAS DE VARIABILIDAD
+================================================================================
+
+A. Medidas de Variabilidad en Python
+--------------------------------------------------------------------------------
+df['PESO'].std()                                          # Desv. estándar
+df['PESO'].max() - df['PESO'].min()                       # Rango
+df['PESO'].quantile(0.8)                                  # Percentil 80
+IQR = df["PESO"].quantile(0.75) - df["PESO"].quantile(0.25)
+
+print(f"Medidas de Variabilidad")
+print(f"Desviación estándar: {df['PESO'].std()}")
+print(f"Rango de los datos: {df['PESO'].max() - df['PESO'].min()}")
+print(f"Percentil 80: {df['PESO'].quantile(0.8)}")
+print(f"Rango intercuartil: {IQR}")
+
+Resultados esperados:
+- Desviación estándar: 11.3549
+- Rango: 60
+- Percentil 80: 71.4
+- IQR: 15.0
+
+B. Medidas de Variabilidad en R
+--------------------------------------------------------------------------------
+%%R
+sd_val    <- sd(df$PESO)
+rango_val <- max(df$PESO) - min(df$PESO)
+p80       <- quantile(df$PESO, 0.8)
+iqr_val   <- IQR(df$PESO)
+
+cat("Medidas de Variabilidad\n")
+cat(sprintf("Desviación estándar: %.4f\n", sd_val))
+cat(sprintf("Rango de los datos:  %.4f\n", rango_val))
+cat(sprintf("Percentil 80:        %.4f\n", p80))
+cat(sprintf("Rango intercuartil:  %.4f\n", iqr_val))
+
+================================================================================
+4. MEDIDAS DE POSICIÓN
+================================================================================
+
+A. Medidas de Posición en Python
+--------------------------------------------------------------------------------
+print(f"Medidas de Posición")
+print(f'Valor mínimo:           {df["PESO"].min()}')
+print(f'Percentil 10:           {df["PESO"].quantile(0.1)}')
+print(f'Percentil 25:           {df["PESO"].quantile(0.25)}')
+print(f'Percentil 50 o mediana: {df["PESO"].median()}')
+print(f'Percentil 75:           {df["PESO"].quantile(0.75)}')
+print(f'Percentil 90:           {df["PESO"].quantile(0.9)}')
+print(f'Valor máximo:           {df["PESO"].max()}')
+
+Resultados:
+- Mínimo: 42
+- P10: 50.0
+- P25: 55.0
+- P50 (mediana): 62.0
+- P75: 70.0
+- P90: 78.0
+- Máximo: 102
+
+B. Medidas de Posición en R
+--------------------------------------------------------------------------------
+%%R
+min(df$PESO)
+quantile(df$PESO, 0.1)
+quantile(df$PESO, 0.25)
+median(df$PESO)
+quantile(df$PESO, 0.75)
+quantile(df$PESO, 0.9)
+max(df$PESO)
+
+cat("Medidas de Posición\n")
+cat(sprintf("Valor mínimo:           %.4f\n", min(df$PESO)))
+cat(sprintf("Percentil 10:           %.4f\n", quantile(df$PESO, 0.1)))
+cat(sprintf("Percentil 25:           %.4f\n", quantile(df$PESO, 0.25)))
+cat(sprintf("Percentil 50 o mediana: %.4f\n", median(df$PESO)))
+cat(sprintf("Percentil 75:           %.4f\n", quantile(df$PESO, 0.75)))
+cat(sprintf("Percentil 90:           %.4f\n", quantile(df$PESO, 0.9)))
+cat(sprintf("Valor máximo:           %.4f\n", max(df$PESO)))
+
+================================================================================
+5. DIAGRAMA DE CAJA Y BIGOTES
+================================================================================
+
+A. Diagrama de Caja y Bigotes básico
+--------------------------------------------------------------------------------
+sns.set(style="whitegrid")
+sns.boxplot(x=df['PESO'])
+
+B. Visualizando la media
+--------------------------------------------------------------------------------
+sns.set(style="whitegrid")
+sns.boxplot(x=df['PESO'])
+plt.axvline(df['PESO'].mean(), c='y')
+
+C. Filtrando valores atípicos
+--------------------------------------------------------------------------------
+iqr = df['PESO'].quantile(0.75) - df['PESO'].quantile(0.25)
+filtro_inferior = df['PESO'] > df['PESO'].quantile(0.25) - (iqr * 1.5)
+filtro_superior = df['PESO'] < df['PESO'].quantile(0.75) + (iqr * 1.5)
+
+df_filtrado = df[filtro_inferior & filtro_superior]
+sns.boxplot(df_filtrado['PESO'])
+
+D. Diagrama de Caja y Bigotes en R (base)
+--------------------------------------------------------------------------------
+%%R
+boxplot(df$PESO,
+        horizontal = TRUE,
+        col = "lightblue",
+        main = "Diagrama de Caja y Bigotes - PESO",
+        xlab = "PESO")
+
+abline(v = mean(df$PESO), col = "gold", lwd = 2, lty = 2)
+
+legend("topright",
+       legend = c("Media"),
+       col = c("gold"),
+       lty = 2, lwd = 2, bty = "n")
+
+E. Diagrama de Caja y Bigotes en R (ggplot2)
+--------------------------------------------------------------------------------
+%%R
+install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(df, aes(x = PESO)) +
+  geom_boxplot(fill = "lightblue", color = "black") +
+  geom_vline(xintercept = mean(df$PESO, na.rm = TRUE),
+             color = "gold", linetype = "dashed", linewidth = 1) +
+  labs(title = "Diagrama de Caja y Bigotes - PESO",
+       x = "PESO", y = "") +
+  theme_minimal() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+================================================================================
+6. TABLA DE FRECUENCIAS (Regla de Sturges)
+================================================================================
+
+A. Regla de Sturges para la variable PESO e intervalos (Python)
+--------------------------------------------------------------------------------
+prices = df['PESO']
+R = prices.max() - prices.min()
+print(f"Rango de los datos: {R}")
+
+n = len(prices)
+print(f"Tamaño de la variable prices: {n}")
+
+k = round(1 + 3.322 * np.log10(n))
+print(f"Regla de Sturges para la variable prices: {k}")
+
+# Intervalos [x1, x2) usando pd.cut
+intervalos = pd.cut(prices, k, right=False)
+intervalos.value_counts().sort_index()
+
+Resultados:
+- Rango: 60
+- n: 74
+- k: 7
+
+Intervalos generados:
+[42.0, 50.571)      12
+[50.571, 59.143)    15
+[59.143, 67.714)    24
+[67.714, 76.286)    13
+[76.286, 84.857)     7
+[84.857, 93.429)     2
+[93.429, 102.06)     1
+
+B. Regla de Sturges para la variable PESO e intervalos (R)
+--------------------------------------------------------------------------------
+%%R
+prices <- df$PESO
+
+# Rango
+R <- max(prices, na.rm = TRUE) - min(prices, na.rm = TRUE)
+cat(sprintf("Rango de los datos: %.4f\n", R))
+
+# Tamaño
+n <- length(prices)
+cat(sprintf("Tamaño de la variable prices: %d\n", n))
+
+# Regla de Sturges
+k <- round(1 + 3.322 * log10(n))
+cat(sprintf("Regla de Sturges para la variable prices: %d\n", k))
+
+# Cortes de intervalos
+cortes <- seq(min(prices, na.rm = TRUE),
+              max(prices, na.rm = TRUE),
+              length.out = k + 1)
+
+# Intervalos [a, b)
+intervalos <- cut(prices,
+                  breaks = cortes,
+                  right = FALSE,
+                  include.lowest = TRUE)
+
+tabla <- table(intervalos)
+print(tabla)
+
+================================================================================
+7. HISTOGRAMAS
+================================================================================
+
+A. Histograma para la variable prices (Python - seaborn)
+--------------------------------------------------------------------------------
+sns.histplot(prices, bins=k)
+
+B. Histograma para la variable prices (R - base)
+--------------------------------------------------------------------------------
+%%R
+cortes <- seq(min(prices, na.rm = TRUE),
+              max(prices, na.rm = TRUE),
+              length.out = k + 1)
+
+hist(prices,
+     breaks = cortes,
+     right = FALSE,          # intervalos [a, b)
+     col = "lightblue",
+     border = "white",
+     main = "Histograma de PESO",
+     xlab = "PESO",
+     ylab = "Frecuencia")
+
+C. Histograma de PESO con k intervalos
+--------------------------------------------------------------------------------
+%%R
+hist(prices,
+     breaks = k,
+     col = "lightblue",
+     border = "white",
+     main = "Histograma de PESO",
+     xlab = "PESO",
+     ylab = "Frecuencia")
+
+================================================================================
+8. ANOTANDO GRÁFICAS
+================================================================================
+
+Configuración previa:
+--------------------------------------------------------------------------------
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style='white')
+
+A. Histograma de ESTATURA con anotaciones
+--------------------------------------------------------------------------------
+ax = sns.histplot(data=df, x='ESTATURA', kde=False, stat='count')
+ax.set(title='ESTATURA de estudiantes',
+       xlabel='Altura',
+       ylabel='Conteo')
+
+plt.show()
+
+B. Distribuciones KDE por sexo (Masculino/Femenino)
+--------------------------------------------------------------------------------
+# Agrupar por estudiante
+por_estudiante = df.groupby(level=0)[['EDAD', 'ESTATURA', 'PESO']].mean()
+sexo = df.groupby(level=0)['SEXO'].last()
+merged = por_estudiante.merge(sexo, left_index=True, right_index=True)
+
+masculino = por_estudiante[merged['SEXO'] == 'Masculino']
+femenino  = por_estudiante[merged['SEXO'] == 'Femenino']
+
+# Figura
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# KDE Masculino
+sns.kdeplot(data=masculino, x='ESTATURA', fill=True,
+            color='steelblue', label='hombres', ax=ax,
+            alpha=0.5, linewidth=1.5)
+
+# KDE Femenino
+sns.kdeplot(data=femenino, x='ESTATURA', fill=True,
+            color='coral', label='mujeres', ax=ax,
+            alpha=0.5, linewidth=1.5)
+
+ax.set_title('Distribuciones de alturas de atletas masculinos y femeninos',
+             fontsize=13, pad=15)
+ax.set_xlabel('altura')
+ax.set_ylabel('Density')
+ax.legend(loc='upper right')
+
+plt.tight_layout()
+plt.show()
+
+================================================================================
+9. GRÁFICAS DE BARRAS
+================================================================================
+
+A. Recordando las columnas
+--------------------------------------------------------------------------------
+df.columns
+
+B. Modalidades de la variable TRANSPORTE
+--------------------------------------------------------------------------------
+df['TRANSPORTE'].unique()
+
+C. Reemplazar modalidad 'El bus que me deja mas cerca' por "BUS"
+--------------------------------------------------------------------------------
+df['TRANSPORTE'] = df['TRANSPORTE'].replace('El bus que me deja mas cerca', 'BUS')
+df['TRANSPORTE'].unique()
+
+D. Tabla de frecuencias
+--------------------------------------------------------------------------------
+df['TRANSPORTE'].value_counts()
+
+Resultado:
+Transcaribe    35
+Mototaxi       15
+BUS            10
+Particular      9
+Taxi            5
+
+E. Gráfico de barras básico
+--------------------------------------------------------------------------------
+ax = sns.barplot(x=counts.index, y=counts, hue=counts.index,
+                 palette='viridis', legend=False)
+ax.set_title('Conteo de Tipo de transportes')
+ax.set(ylabel='count')
+
+for p in ax.patches:
+    ax.annotate(f'{p.get_height()}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                xytext=(0, 9),
+                textcoords='offset points')
+
+F. Gráfico de barras con porcentajes
+--------------------------------------------------------------------------------
+porcentajes = round(counts * 100 / counts.sum(), 1)
+
+ax = sns.barplot(x=counts.index, y=porcentajes, hue=counts.index,
+                 palette='viridis', legend=False)
+ax.set_title('Conteo de Tipo de transportes')
+ax.set(ylabel='porcentajes')
+
+for p in ax.patches:
+    ax.annotate(f'{p.get_height()}%',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                xytext=(0, 9),
+                textcoords='offset points')
+
+G. Gráfico de barras horizontal con porcentajes
+--------------------------------------------------------------------------------
+ax = sns.barplot(x=porcentajes, y=counts.index, hue=counts.index,
+                 palette='viridis', legend=False)
+ax.set_title('Conteo de Tipo de transportes')
+ax.set(xlabel='Porcentajes', ylabel='TRANSPORTE')
+
+for p in ax.patches:
+    ax.annotate(f'{p.get_width()}%',
+                (p.get_width(), p.get_y() + p.get_height() / 2.),
+                ha='left', va='center',
+                xytext=(5, 0),
+                textcoords='offset points')
+
+================================================================================
+10. TABLAS DE CONTINGENCIA
+================================================================================
+
+A. GR_SANGUINEO vs SEXO
+--------------------------------------------------------------------------------
+pd.crosstab(df['GR_SANGUINEO'], df['SEXO'])
+
+B. TRANSPORTE vs SEXO
+--------------------------------------------------------------------------------
+pd.crosstab(df['TRANSPORTE'], df['SEXO'])
+
+C. Tres variables categóricas con márgenes
+--------------------------------------------------------------------------------
+pd.crosstab(df['GR_SANGUINEO'], [df['SEXO'], df['TRANSPORTE']],
+            margins=True, margins_name='total')
+
+D. PROGRAMA vs SEXO vs ESTRATO
+--------------------------------------------------------------------------------
+crosstab = pd.crosstab(df['PROGRAMA'], [df['SEXO'], df['ESTRATO']],
+                       margins=True, margins_name='total')
+crosstab
+
+================================================================================
+11. GRAFICANDO CON MÚLTIPLES AXIS
+================================================================================
+
+A. Subplots con múltiples variables categóricas
+--------------------------------------------------------------------------------
+fig, axes = plt.subplots(3, 2, figsize=(12, 10), sharex=False, sharey=False)
+axes = axes.flatten()
+
+transport_types = crosstab2.index
+genders = crosstab2.columns
+
+for i, transport_type in enumerate(transport_types):
+    if i < len(axes):
+        ax = axes[i]
+        data_to_plot = crosstab2.loc[transport_type]
+        sns.barplot(x=data_to_plot.values, y=genders, ax=ax,
+                    palette='viridis', hue=genders, legend=False)
+        ax.set_title(f'Conteo de {transport_type}')
+        ax.set_xlabel('Conteo')
+        ax.set_ylabel('Género')
+
+for j in range(len(transport_types), len(axes)):
+    fig.delaxes(axes[j])
+
+fig.suptitle('Conteo de Tipos de Transporte por Género', fontsize=16, y=1.02)
+plt.tight_layout(rect=[0, 0.03, 1, 0.98])
+plt.show()
+
+================================================================================
+12. BOXPLOTS Y VIOLINPLOTS
+================================================================================
+
+A. Preparación de datos por estudiante
+--------------------------------------------------------------------------------
+por_estudiante = df.groupby(level=0)[['EDAD', 'ESTATURA', 'PESO']].mean()
+sexo = df.groupby(level=0)['SEXO'].last()
+merged = por_estudiante.merge(sexo, left_index=True, right_index=True)
+merged
+
+B. Boxplot simple de PESO
+--------------------------------------------------------------------------------
+sns.boxplot(df['PESO'])
+
+C. Boxplot: Sexo vs Peso
+--------------------------------------------------------------------------------
+plt.figure(figsize=(5, 10))
+custom_palette = {'Femenino': 'deeppink', 'Masculino': 'dodgerblue'}
+sns.boxplot(data=merged, x='SEXO', y='PESO',
+            palette=custom_palette, hue='SEXO', legend=False)
+
+D. Violinplot: Sexo vs Peso
+--------------------------------------------------------------------------------
+plt.figure(figsize=(5, 10))
+sns.violinplot(data=merged, x='SEXO', y='PESO',
+               palette=custom_palette, hue='SEXO', legend=False)
+
+================================================================================
+13. COEFICIENTE DE CORRELACIÓN DE PEARSON
+================================================================================
+
+A. Gráfico de dispersión PESO vs ESTATURA
+--------------------------------------------------------------------------------
+y = df['PESO']
+x = df['ESTATURA']
+plt.scatter(x, y)
+
+B. Dispersión por Sexo
+--------------------------------------------------------------------------------
+y = merged['PESO']
+x = merged['ESTATURA']
+
+custom_palette = {'Femenino': 'deeppink', 'Masculino': 'dodgerblue'}
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=merged, x=x, y=y, hue='SEXO', palette=custom_palette)
+plt.title('Dispersión de Peso vs. Estatura por Sexo')
+plt.xlabel('Estatura (cm)')
+plt.ylabel('Peso (kg)')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+C. Cálculo del coeficiente de Pearson
+--------------------------------------------------------------------------------
+pearson_corr, p_value = stats.pearsonr(x, y)
+
+print(f'Coeficiente de Correlación de Pearson entre Peso y Estatura: {pearson_corr:.4f}')
+print(f'Valor p asociado: {p_value:.4f}')
+
+if p_value < 0.05:
+    print('La correlación es estadísticamente significativa (p < 0.05).')
+else:
+    print('La correlación no es estadísticamente significativa (p >= 0.05).')
+
+if pearson_corr > 0:
+    print('Existe una relación lineal positiva entre Peso y Estatura.')
+elif pearson_corr < 0:
+    print('Existe una relación lineal negativa entre Peso y Estatura.')
+else:
+    print('No existe una relación lineal clara entre Peso y Estatura.')
+
+Resultados:
+- R de Pearson: 0.6580
+- Valor p: 0.0000 (significativo)
+- Relación positiva
+
+D. Dispersión con regresión lineal por sexo
+--------------------------------------------------------------------------------
+import scipy.stats as stats
+
+y_col = 'PESO'
+x_col = 'ESTATURA'
+custom_palette = {'Femenino': 'deeppink', 'Masculino': 'dodgerblue'}
+
+plt.figure(figsize=(10, 7))
+ax = sns.scatterplot(data=merged, x=x_col, y=y_col, hue='SEXO',
+                     palette=custom_palette, s=80, alpha=0.8)
+
+for i, (gender, color) in enumerate(custom_palette.items()):
+    subset = merged[merged['SEXO'] == gender]
+
+    pearson_corr, _ = stats.pearsonr(subset[x_col], subset[y_col])
+    r_squared = pearson_corr**2
+    slope, intercept, _, _, _ = stats.linregress(subset[x_col], subset[y_col])
+
+    sns.regplot(data=subset, x=x_col, y=y_col, scatter=False,
+                color=color, ax=ax, line_kws={'linewidth': 2})
+
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+
+    if gender == 'Femenino':
+        text_x_pos = xmin + (xmax - xmin) * 0.05
+        text_y_pos_r = ymax - (ymax - ymin) * 0.05
+        text_y_pos_eq = ymax - (ymax - ymin) * 0.13
+        ha = 'left'
+    else:
+        text_x_pos = xmax - (xmax - xmin) * 0.05
+        text_y_pos_r = ymax - (ymax - ymin) * 0.05
+        text_y_pos_eq = ymax - (ymax - ymin) * 0.13
+        ha = 'right'
+
+    ax.text(text_x_pos, text_y_pos_r,
+            f'R ({gender}): {pearson_corr:.2f}\nR² ({gender}): {r_squared:.2f}',
+            color=color, fontsize=10, weight='bold', ha=ha, va='top',
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=color, lw=1, alpha=0.7))
+
+    ax.text(text_x_pos, text_y_pos_eq,
+            f'Y = {slope:.2f}X + {intercept:.2f}',
+            color=color, fontsize=10, weight='bold', ha=ha, va='top',
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=color, lw=1, alpha=0.7))
+
+plt.title('Dispersión de Peso vs. Estatura por Sexo con Líneas de Regresión', fontsize=14)
+plt.xlabel('Estatura (cm)', fontsize=12)
+plt.ylabel('Peso (kg)', fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(title='SEXO', loc='upper left', bbox_to_anchor=(1, 1))
+plt.tight_layout(rect=[0, 0, 0.88, 1])
+plt.show()
+
+================================================================================
+14. MATRIZ DE CORRELACIONES Y MAPAS DE CALOR
+================================================================================
+
+A. Cálculo de la matriz de correlación
+--------------------------------------------------------------------------------
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Seleccionar solo columnas numéricas
+df_numerico = df.select_dtypes(include=[np.number])
+df_numerico = df_numerico.drop(columns=['NRC'])
+
+# Matriz de correlación
+matriz_corr = df_numerico.corr()
+display(matriz_corr)
+
+B. Mapa de calor de la matriz de correlación
+--------------------------------------------------------------------------------
+plt.figure(figsize=(10, 8))
+sns.heatmap(matriz_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+plt.title('Matriz de Correlación de Variables Numéricas')
+plt.show()
+
+================================================================================
+15. GRÁFICAS DE DISPERSIÓN
+================================================================================
+
+A. Dispersión PARCIAL 2 vs ASISTENCIA2
+--------------------------------------------------------------------------------
+y = df_numerico['ASISTENCIA2']
+x = df_numerico['PARCIAL 2']
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df_numerico, x=x, y=y)
+plt.title('Dispersión de PARCIAL 2 vs. ASISTENCIA2 por Sexo')
+plt.xlabel('PARCIAL 2')
+plt.ylabel('ASISTENCIA2')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+B. Dispersión por Sexo
+--------------------------------------------------------------------------------
+custom_palette = {'Femenino': 'deeppink', 'Masculino': 'dodgerblue'}
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df, x=x, y=y, hue='SEXO', palette=custom_palette)
+plt.title('Dispersión de PARCIAL 2 vs. ASISTENCIA2 por Sexo')
+plt.xlabel('PARCIAL 2')
+plt.ylabel('ASISTENCIA2')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+================================================================================
+16. PAIRPLOTS: RELACIÓN ENTRE MÚLTIPLES VARIABLES
+================================================================================
+
+A. Pairplot de variables numéricas
+--------------------------------------------------------------------------------
+sns.pairplot(df_numerico);
+
+================================================================================
+INSTRUCCIONES GENERALES DE USO
+================================================================================
+
+1. Ejecutar las celdas en el orden presentado.
+
+2. Para las celdas en R, usar el magic command %%R al inicio de cada celda
+   cuando se trabaja desde un notebook de Python (Colab).
+
+3. La base de datos se carga desde:
+   https://raw.githubusercontent.com/JSEFERINO/Curso_Estadistica/refs/heads/main/00.%20DATOS202460ULTIMOS2.csv
+
+4. En caso de que la URL devuelva error 404, descargar el archivo manualmente
+   y cargarlo desde una ruta local.
+
+5. Los resultados mostrados (media, mediana, moda, etc.) corresponden al
+   dataset de 74 observaciones cargado en el cuaderno original.
+
+6. Para reproducir la sección de tablas de contingencia con múltiples
+   variables categóricas, se recomienda ejecutar primero la sección 10 (A-D).
+
+7. Los gráficos usan la paleta personalizada:
+   custom_palette = {'Femenino': 'deeppink', 'Masculino': 'dodgerblue'}
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
