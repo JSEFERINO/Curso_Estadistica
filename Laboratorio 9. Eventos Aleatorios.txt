@@ -1,0 +1,1042 @@
+---
+
+## 📝 Celda 0 — 📓 Laboratorio 9. Experimentos Aleatorios
+├── Celda 0: Portada + instrucciones
+├── Celda 1: Instalación (solo plotly)
+├── Celda 2: Utilidades comunes (funciones auxiliares)
+├── 🪙 Celda 3: Estación 1 - Monedas (Bernoulli + LGN)
+├── 🎲 Celda 4: Estación 2 - Dados (Uniforme + TCL)
+├── 📊 Celda 5: Estación 3 - Ley Grandes Números
+├── 🥧 Celda 6: Estación 4 - Monte Carlo π
+├── 🎂 Celda 7: Estación 5 - Problema del Cumpleaños
+├── 🚪 Celda 8: Estación 6 - Monty Hall
+├── 🎡 Celda 9: Estación 7 - Ruleta (Valor Esperado)
+└── 🃏 Celda 10: Estación 8 - Póker (Combinatoria)
+```
+
+---
+
+## 📝 Celda 1 — Instalación y preparación
+
+```python
+# ============================================================
+# 🎓 LABORATORIO DE ESTADÍSTICA Y PROBABILIDAD
+# ============================================================
+# Este notebook NO necesita servidores externos.
+# Todo se ejecuta y visualiza directamente en Colab.
+# ============================================================
+
+# Instalar solo lo necesario (rápido, ~10 segundos)
+!pip install -q plotly numpy pandas scipy ipywidgets
+print("✅ Librerías listas. Ahora puedes ejecutar las celdas de las estaciones.")
+```
+
+---
+
+## 📝 Celda 2 — Utilidades comunes (obligatoria antes de todo)
+
+```python
+# ============================================================
+# UTILIDADES COMUNES - Ejecutar SIEMPRE antes de cada estación
+# ============================================================
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+from scipy.stats import binom
+from collections import Counter
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+
+# Configuración global para Colab
+from IPython.display import display, HTML
+
+# Fijar semilla para reproducibilidad (pueden cambiarla)
+np.random.seed(42)
+
+# ---------- FUNCIONES AUXILIARES REUTILIZABLES ----------
+
+def grafico_doble(categorias, frecuencias, titulo="Frecuencias",
+                   etiqueta_x="Categoría", colores=None):
+    """Dibuja un gráfico doble: frecuencias absolutas y relativas."""
+    total = sum(frecuencias)
+    frec_rel = [f / total * 100 if total > 0 else 0 for f in frecuencias]
+    fig = make_subplots(rows=1, cols=2,
+        subplot_titles=("📊 Frecuencias absolutas", "📈 Frecuencias relativas (%)"))
+    colores_uso = colores if colores else "#3498db"
+    fig.add_trace(go.Bar(x=categorias, y=frecuencias, marker_color=colores_uso,
+        text=frecuencias, textposition="outside", showlegend=False, name="Absolutas"), row=1, col=1)
+    fig.add_trace(go.Bar(x=categorias, y=frec_rel, marker_color="#e67e22",
+        text=[f"{v:.2f}%" for v in frec_rel], textposition="outside",
+        showlegend=False, name="Relativas"), row=1, col=2)
+    fig.update_xaxes(title_text=etiqueta_x, row=1, col=1)
+    fig.update_yaxes(title_text="Frecuencia", row=1, col=1)
+    fig.update_xaxes(title_text=etiqueta_x, row=1, col=2)
+    fig.update_yaxes(title_text="Porcentaje (%)", row=1, col=2)
+    fig.update_layout(title_text=titulo, height=450, showlegend=False)
+    return fig
+
+
+def grafico_comparacion_teorica(categorias, frec_obs, prob_teor, n_total,
+                                  titulo="Comparación observada vs teórica"):
+    """Compara frecuencias observadas con las esperadas por teoría."""
+    frec_esp = [p * n_total for p in prob_teor]
+    fig = make_subplots(rows=1, cols=2,
+        subplot_titles=("📊 Frec. observadas vs esperadas",
+                        "📈 Probabilidades observadas vs teóricas (%)"))
+    fig.add_trace(go.Bar(x=categorias, y=frec_obs, name="Observado",
+        marker_color="#3498db", text=frec_obs, textposition="outside"), row=1, col=1)
+    fig.add_trace(go.Bar(x=categorias, y=frec_esp, name="Esperado",
+        marker_color="#e67e22", text=[f"{v:.1f}" for v in frec_esp],
+        textposition="outside"), row=1, col=1)
+    total_obs = sum(frec_obs) if sum(frec_obs) > 0 else 1
+    prob_obs = [f / total_obs * 100 for f in frec_obs]
+    prob_teo_pct = [p * 100 for p in prob_teor]
+    fig.add_trace(go.Bar(x=categorias, y=prob_obs, name="Observado %",
+        marker_color="#3498db", text=[f"{v:.2f}%" for v in prob_obs],
+        textposition="outside", showlegend=False), row=1, col=2)
+    fig.add_trace(go.Bar(x=categorias, y=prob_teo_pct, name="Teórico %",
+        marker_color="#e67e22", text=[f"{v:.2f}%" for v in prob_teo_pct],
+        textposition="outside", showlegend=False), row=1, col=2)
+    fig.update_xaxes(title_text="Categoría", row=1, col=1)
+    fig.update_yaxes(title_text="Frecuencia", row=1, col=1)
+    fig.update_xaxes(title_text="Categoría", row=1, col=2)
+    fig.update_yaxes(title_text="Porcentaje (%)", row=1, col=2)
+    fig.update_layout(title_text=titulo, height=480, barmode="group",
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                                  xanchor="center", x=0.5))
+    return fig
+
+
+print("✅ Utilidades cargadas. Ya puedes pasar a las estaciones.")
+```
+
+---
+
+## 📝 Celda 3 — 🪙 ESTACIÓN 1: Monedas (Bernoulli + Ley de Grandes Números)
+
+```python
+# ============================================================
+# 🪙 ESTACIÓN 1: Monedas - Bernoulli y Ley de los Grandes Números
+# ============================================================
+print("=" * 60)
+print("🪙 ESTACIÓN 1: LANZAMIENTO DE MONEDAS")
+print("=" * 60)
+
+# ---------- EXPERIMENTO 1.1: UNA MONEDA, VARIOS N ----------
+print("\n📌 Experimento 1.1: Una moneda, distintos números de lanzamientos\n")
+
+def simular_moneda(n_lanzamientos, prob_cara=0.5):
+    """Simula N lanzamientos de una moneda y devuelve resultados y frecuencia."""
+    resultados = np.random.choice(["CARA", "SELLO"], size=n_lanzamientos,
+                                    p=[prob_cara, 1 - prob_cara])
+    caras = np.sum(resultados == "CARA")
+    return caras, n_lanzamientos - caras, resultados
+
+# Comparar 100 vs 10000 lanzamientos
+for n in [100, 1000, 10000]:
+    caras, sellos, _ = simular_moneda(n)
+    frec_cara = caras / n
+    print(f"  N = {n:>6}: CARA = {caras:>5} ({frec_cara:.4f}), "
+          f"SELLO = {sellos:>5} ({sellos/n:.4f})  |  Error = {abs(frec_cara - 0.5):.4f}")
+
+# ---------- EXPERIMENTO 1.2: GRÁFICO DE CONVERGENCIA ----------
+print("\n📌 Experimento 1.2: Convergencia de la frecuencia relativa (LGN)\n")
+
+n_max = 5000
+resultados = np.random.choice([1, 0], size=n_max, p=[0.5, 0.5])
+acumulada = np.cumsum(resultados) / np.arange(1, n_max + 1)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(y=acumulada, mode="lines", name="Frecuencia relativa de CARA",
+                          line=dict(color="#3498db", width=2)))
+fig.add_hline(y=0.5, line_dash="dash", line_color="red",
+              annotation_text="P(CARA) = 0.5")
+fig.update_layout(title=f"🪙 Ley de los Grandes Números (N = {n_max})",
+                  xaxis_title="Número de lanzamientos",
+                  yaxis_title="Frecuencia relativa",
+                  height=450)
+fig.show()
+
+print(f"  Frecuencia final (N={n_max}): {acumulada[-1]:.5f}")
+print(f"  Error absoluto final: {abs(acumulada[-1] - 0.5):.5f}")
+
+# ---------- EXPERIMENTO 1.3: N MONEDAS SIMULTÁNEAS ----------
+print("\n📌 Experimento 1.3: Lanzar N monedas simultáneamente\n")
+
+def simular_n_monedas(n_monedas, n_repeticiones=5000):
+    """Lanza N monedas M veces y devuelve la distribución del número de caras."""
+    lanzamientos = np.random.choice([0, 1], size=(n_repeticiones, n_monedas))
+    return np.sum(lanzamientos, axis=1)
+
+for n_monedas in [5, 10]:
+    resultados_multi = simular_n_monedas(n_monedas)
+    dist = Counter(resultados_multi)
+    cats = list(range(0, n_monedas + 1))
+    frecs = [dist.get(k, 0) for k in cats]
+    probs_teo = [binom.pmf(k, n_monedas, 0.5) for k in cats]
+
+    print(f"\n  N = {n_monedas} monedas (5000 repeticiones):")
+    for k, f, p in zip(cats, frecs, probs_teo):
+        print(f"    {k:>2} caras: obs = {f:>4} ({f/5000:.3f}), "
+              f"teórica = {p:.4f}")
+
+    fig = grafico_comparacion_teorica(
+        [str(c) for c in cats], frecs, probs_teo, sum(frecs),
+        titulo=f"🎯 {n_monedas} monedas: Observado vs Binomial({n_monedas}, 0.5)")
+    fig.show()
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 1 (escribe tus respuestas)")
+print("=" * 60)
+print("""
+1.1 ¿Qué distribución sigue el número de caras cuando lanzas N monedas?
+    Escribe su función de probabilidad.
+
+1.2 Con 1 moneda: ¿cómo cambia el error absoluto al aumentar N?
+
+1.3 Con 5 monedas: ¿cuál es el número de caras más frecuente? ¿Por qué?
+
+1.4 Compara el histograma empírico con la distribución Binomial(5, 0.5).
+    ¿Se parecen? ¿Con qué N se acercan más?
+""")
+```
+
+**Resultado visual esperado**: gráfico de convergencia + 2 gráficos de barras dobles (observado vs teórico).
+
+---
+
+## 📝 Celda 4 — 🎲 ESTACIÓN 2: Dados (Uniforme + TCL)
+
+```python
+# ============================================================
+# 🎲 ESTACIÓN 2: Dados - Distribución Uniforme y Teorema Central del Límite
+# ============================================================
+print("=" * 60)
+print("🎲 ESTACIÓN 2: LANZAMIENTO DE DADOS")
+print("=" * 60)
+
+# ---------- EXPERIMENTO 2.1: UN DADO ----------
+print("\n📌 Experimento 2.1: Un dado de 6 caras (5000 lanzamientos)\n")
+
+n = 5000
+dados = np.random.randint(1, 7, size=n)
+frec = Counter(dados)
+cats = list(range(1, 7))
+frecs = [frec.get(k, 0) for k in cats]
+
+# Estadísticas empíricas
+print(f"  Media empírica:  {dados.mean():.4f}   |  Teórica: {(6+1)/2:.4f}")
+print(f"  Var. empírica:   {dados.var():.4f}   |  Teórica: {(6**2 - 1)/12:.4f}")
+print(f"  Desv. empírica:  {dados.std():.4f}   |  Teórica: {np.sqrt((6**2-1)/12):.4f}")
+
+fig = grafico_comparacion_teorica(
+    [str(c) for c in cats], frecs, [1/6]*6, n,
+    titulo="🎯 Dado de 6 caras: Observado vs Uniforme discreta")
+fig.show()
+
+# ---------- EXPERIMENTO 2.2: SUMA DE N DADOS (TCL) ----------
+print("\n📌 Experimento 2.2: Suma de N dados (Teorema Central del Límite)\n")
+
+for n_dados in [1, 2, 5, 10]:
+    lanzamientos = np.random.randint(1, 7, size=(5000, n_dados))
+    sumas = np.sum(lanzamientos, axis=1)
+
+    media_teo = n_dados * 3.5
+    var_teo = n_dados * (6**2 - 1) / 12
+
+    print(f"\n  N = {n_dados} dados:")
+    print(f"    Media empírica = {sumas.mean():.3f}  |  Teórica = {media_teo:.3f}")
+    print(f"    Desv. empírica = {sumas.std():.3f}  |  Teórica = {np.sqrt(var_teo):.3f}")
+
+    fig = px.histogram(x=sumas, nbins=min(n_dados*5+2, 40),
+                        title=f"🎲 Suma de {n_dados} dado(s) (5000 simulaciones)",
+                        labels={"x": f"Suma de {n_dados} dados", "y": "Frecuencia"},
+                        color_discrete_sequence=["#9b59b6"])
+    fig.update_layout(height=400, showlegend=False)
+    fig.show()
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 2")
+print("=" * 60)
+print("""
+2.1 Para 1 dado: ¿qué distribución teórica tiene X?
+    ¿Cuál es E(X)? ¿Cuál es Var(X)?
+
+2.2 Para la suma de 5 dados: ¿la forma del histograma se parece a una campana?
+    ¿Cómo cambia la forma al pasar de 1 a 10 dados?
+
+2.3 ¿Qué teorema garantiza que la distribución de la suma se vuelva más "normal"?
+    Enúncialo con tus palabras.
+
+2.4 Calcula E(X₁+...+X₅) y Var(X₁+...+X₅) usando las propiedades de
+    esperanza y varianza. Compáralo con lo observado en la simulación.
+""")
+```
+
+---
+
+## 📝 Celda 5 — 📊 ESTACIÓN 3: Ley de los Grandes Números (interactiva)
+
+```python
+# ============================================================
+# 📊 ESTACIÓN 3: Ley de los Grandes Números - Explorador Interactivo
+# ============================================================
+print("=" * 60)
+print("📊 ESTACIÓN 3: LEY DE LOS GRANDES NÚMEROS")
+print("=" * 60)
+
+# ---------- SELECTOR DE EXPERIMENTO ----------
+print("\n📌 Elige el experimento cambiando la variable 'experimento'\n")
+print("  Opciones: 'moneda', 'dado_6', 'dado_par', 'carta_roja'")
+
+experimento = "moneda"  # 👈 CAMBIA ESTO
+n_max = 10000            # 👈 CAMBIA ESTO
+
+# Configuración según experimento
+if experimento == "moneda":
+    resultados = np.random.choice([1, 0], size=n_max, p=[0.5, 0.5])
+    prob_teo, etiqueta, color = 0.5, "P(CARA) = 0.5", "#3498db"
+elif experimento == "dado_6":
+    resultados = (np.random.randint(1, 7, n_max) == 6).astype(int)
+    prob_teo, etiqueta, color = 1/6, "P(6) = 1/6 ≈ 0.1667", "#e67e22"
+elif experimento == "dado_par":
+    resultados = (np.random.randint(1, 7, n_max) % 2 == 0).astype(int)
+    prob_teo, etiqueta, color = 0.5, "P(par) = 0.5", "#27ae60"
+elif experimento == "carta_roja":
+    palos_rojos = ["♥", "♦"]
+    valores = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+    baraja = [f"{v}{p}" for v in valores for p in ["♠", "♥", "♦", "♣"]]
+    extracciones = np.random.choice(baraja, size=n_max)
+    resultados = np.array([1 if c[-1] in palos_rojos else 0 for c in extracciones])
+    prob_teo, etiqueta, color = 0.5, "P(roja) = 0.5", "#e74c3c"
+
+acumulada = np.cumsum(resultados) / np.arange(1, n_max + 1)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(y=acumulada, mode="lines", name="Frecuencia relativa",
+                          line=dict(color=color, width=2)))
+fig.add_hline(y=prob_teo, line_dash="dash", line_color="red", annotation_text=etiqueta)
+fig.update_layout(
+    title=f"📊 Convergencia - {experimento.replace('_', ' ').title()} (N = {n_max})",
+    xaxis_title="Número de ensayos",
+    yaxis_title="Frecuencia relativa",
+    height=450
+)
+fig.show()
+
+# ---------- MÉTRICAS CLAVE ----------
+print(f"\n📌 Métricas para el experimento '{experimento}':")
+print(f"  Probabilidad teórica: {prob_teo:.5f}")
+print(f"  Frecuencia final:     {acumulada[-1]:.5f}")
+print(f"  Error absoluto:       {abs(acumulada[-1] - prob_teo):.5f}")
+
+# ---------- DEMOSTRACIÓN DEL ERROR VS N ----------
+print(f"\n📌 Error absoluto a distintos valores de N:\n")
+for n_corte in [10, 50, 100, 500, 1000, 5000, 10000]:
+    if n_corte <= n_max:
+        frec_n = np.mean(resultados[:n_corte])
+        error = abs(frec_n - prob_teo)
+        print(f"  N = {n_corte:>6}: frec = {frec_n:.4f}, error = {error:.4f}")
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 3")
+print("=" * 60)
+print("""
+3.1 ¿Qué observas en el gráfico de convergencia al aumentar N?
+    ¿Cuándo se estabiliza?
+
+3.2 ¿Qué es el "error absoluto"? ¿Cómo cambia con N?
+    ¿Se reduce linealmente?
+
+3.3 Enuncia la Ley de los Grandes Números (versión débil) y explica
+    cómo se relaciona con este experimento.
+""")
+```
+
+---
+
+## 📝 Celda 6 — 🥧 ESTACIÓN 4: Monte Carlo para π
+
+```python
+# ============================================================
+# 🥧 ESTACIÓN 4: Monte Carlo para estimar π
+# ============================================================
+print("=" * 60)
+print("🥧 ESTACIÓN 4: MONTE CARLO PARA π")
+print("=" * 60)
+
+# ---------- FUNCIÓN DE MONTE CARLO ----------
+def monte_carlo_pi(n_puntos):
+    """Estima π lanzando N puntos aleatorios en [-1,1]×[-1,1]."""
+    x = np.random.uniform(-1, 1, n_puntos)
+    y = np.random.uniform(-1, 1, n_puntos)
+    dentro = x**2 + y**2 <= 1
+    pi_est = 4 * np.sum(dentro) / n_puntos
+    return x, y, dentro, pi_est
+
+# ---------- EXPERIMENTO CON DISTINTOS N ----------
+print("\n📌 Estimación de π con distintos N:\n")
+print(f"  {'N':>8} | {'π estimado':>12} | {'Error absoluto':>15}")
+print("-" * 45)
+for n in [100, 500, 1000, 5000, 10000, 50000]:
+    _, _, _, pi_est = monte_carlo_pi(n)
+    print(f"  {n:>8} | {pi_est:>12.6f} | {abs(pi_est - np.pi):>15.6f}")
+
+print(f"\n  π real: {np.pi:.6f}")
+
+# ---------- VISUALIZACIÓN CON N = 2000 ----------
+print("\n📌 Visualización con N = 2000 puntos:\n")
+n_vis = 2000
+x, y, dentro, pi_est = monte_carlo_pi(n_vis)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=x[dentro], y=y[dentro], mode="markers",
+    marker=dict(color="#27ae60", size=5, opacity=0.6), name="Dentro del círculo"))
+fig.add_trace(go.Scatter(x=x[~dentro], y=y[~dentro], mode="markers",
+    marker=dict(color="#e74c3c", size=5, opacity=0.6), name="Fuera del círculo"))
+theta = np.linspace(0, 2*np.pi, 200)
+fig.add_trace(go.Scatter(x=np.cos(theta), y=np.sin(theta), mode="lines",
+    line=dict(color="blue", width=3), name="Círculo unitario"))
+fig.update_layout(
+    title=f"🥧 Monte Carlo (N = {n_vis}) → π ≈ {pi_est:.5f}  |  Error = {abs(pi_est-np.pi):.5f}",
+    xaxis=dict(range=[-1.1, 1.1], scaleanchor="y", scaleratio=1),
+    yaxis=dict(range=[-1.1, 1.1]),
+    height=600, plot_bgcolor="white"
+)
+fig.show()
+
+# ---------- CONVERGENCIA DE π ----------
+print("\n📌 Convergencia de π con N creciente:\n")
+n_max_conv = 5000
+x_c = np.random.uniform(-1, 1, n_max_conv)
+y_c = np.random.uniform(-1, 1, n_max_conv)
+dentro_c = x_c**2 + y_c**2 <= 1
+estimaciones = 4 * np.cumsum(dentro_c) / np.arange(1, n_max_conv + 1)
+
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(y=estimaciones, mode="lines",
+    line=dict(color="#9b59b6", width=2), name="π estimado"))
+fig2.add_hline(y=np.pi, line_dash="dash", line_color="red",
+               annotation_text=f"π real = {np.pi:.5f}")
+fig2.update_layout(title="🥧 Convergencia de la estimación de π",
+                    xaxis_title="Número de puntos", yaxis_title="π estimado",
+                    height=400)
+fig2.show()
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 4")
+print("=" * 60)
+print("""
+4.1 Explica con tus palabras cómo lanzar puntos aleatorios en un cuadrado
+    de lado 2 permite estimar π.
+
+4.2 ¿Qué relación existe entre el área del círculo y el área del cuadrado?
+    (Pista: el área del cuadrado es 4, el área del círculo unitario es π)
+
+4.3 ¿Cómo mejora la estimación al aumentar N? ¿El error se reduce a la
+    mitad cuando duplicas N? ¿Por qué?
+""")
+```
+
+---
+
+## 📝 Celda 7 — 🎂 ESTACIÓN 5: Problema del Cumpleaños
+
+```python
+# ============================================================
+# 🎂 ESTACIÓN 5: Problema del Cumpleaños
+# ============================================================
+print("=" * 60)
+print("🎂 ESTACIÓN 5: PROBLEMA DEL CUMPLEAÑOS")
+print("=" * 60)
+
+# ---------- FUNCIONES ----------
+def simular_cumpleanos(n_personas, n_simulaciones=5000):
+    """Simula grupos de N personas y cuenta coincidencias."""
+    coincidencias = 0
+    for _ in range(n_simulaciones):
+        dias = np.random.randint(1, 366, size=n_personas)
+        if len(set(dias)) < n_personas:
+            coincidencias += 1
+    return coincidencias / n_simulaciones
+
+def prob_teorica_cumpleanos(n):
+    """Probabilidad teórica de al menos una coincidencia."""
+    if n > 365:
+        return 1.0
+    p_no = 1.0
+    for i in range(n):
+        p_no *= (365 - i) / 365
+    return 1 - p_no
+
+# ---------- EXPERIMENTO CON DISTINTOS N ----------
+print("\n📌 Probabilidad empírica vs teórica según N:\n")
+print(f"  {'N personas':>12} | {'Simulada':>12} | {'Teórica':>12} | {'Error':>10}")
+print("-" * 55)
+
+for n in [5, 10, 15, 20, 23, 30, 40, 50, 70, 100]:
+    p_sim = simular_cumpleanos(n, 5000)
+    p_teo = prob_teorica_cumpleanos(n)
+    print(f"  {n:>12} | {p_sim:>12.4f} | {p_teo:>12.4f} | {abs(p_sim - p_teo):>10.4f}")
+
+# ---------- CURVA COMPLETA ----------
+print("\n📌 Curva completa de probabilidad (2 a 100 personas):\n")
+ns = list(range(2, 101))
+probs_teo = [prob_teorica_cumpleanos(n) for n in ns]
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=ns, y=probs_teo, mode="lines",
+    line=dict(color="#9b59b6", width=3), name="P(al menos 1 coincidencia)"))
+fig.add_hline(y=0.5, line_dash="dash", line_color="red",
+               annotation_text="50%")
+fig.add_vline(x=23, line_dash="dot", line_color="orange",
+               annotation_text="n = 23")
+fig.update_layout(
+    title="🎂 Problema del Cumpleaños - Curva Teórica",
+    xaxis_title="Número de personas",
+    yaxis_title="Probabilidad de coincidencia",
+    height=450
+)
+fig.show()
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 5")
+print("=" * 60)
+print("""
+5.1 ¿Con cuántas personas la probabilidad de coincidencia supera el 50%?
+    ¿Te sorprende? ¿Por qué?
+
+5.2 Calcula manualmente la probabilidad para n=23 con la fórmula:
+    P(ninguna coincidencia) = (365/365) × (364/365) × ... × (343/365)
+    P(al menos 1) = 1 - P(ninguna)
+
+5.3 ¿Por qué la intuición nos engaña? ¿Por qué no es necesario que TODOS
+    cumplan años el mismo día, sino que AL MENOS DOS coincidan?
+""")
+```
+
+---
+
+## 📝 Celda 8 — 🚪 ESTACIÓN 6: Monty Hall
+
+```python
+# ============================================================
+# 🚪 ESTACIÓN 6: Problema de Monty Hall
+# ============================================================
+print("=" * 60)
+print("🚪 ESTACIÓN 6: PROBLEMA DE MONTY HALL")
+print("=" * 60)
+
+# ---------- REGLAS ----------
+print("""
+📖 Reglas del juego:
+1. Hay 3 puertas: 1 con premio 🏆, 2 con cabras 🐐
+2. Eliges una puerta sin saber qué hay detrás
+3. El presentador (que SÍ sabe) abre una puerta con cabra
+4. Te da la opción de CAMBIAR o MANTENER tu elección
+5. ¿Conviene cambiar?
+""")
+
+# ---------- SIMULACIÓN ----------
+def simular_monty_hall(n_partidas, cambiar):
+    """Simula N partidas de Monty Hall con la estrategia 'cambiar' o 'no cambiar'."""
+    victorias = 0
+    for _ in range(n_partidas):
+        premio = np.random.randint(0, 3)
+        eleccion = np.random.randint(0, 3)
+        # El presentador abre una puerta que no es la elegida ni el premio
+        opciones = [i for i in range(3) if i != eleccion and i != premio]
+        if len(opciones) == 0:
+            opciones = [i for i in range(3) if i != eleccion]
+        abierta = np.random.choice(opciones)
+        # Decisión final
+        if cambiar:
+            opciones_finales = [i for i in range(3) if i != eleccion and i != abierta]
+            eleccion_final = opciones_finales[0] if opciones_finales else eleccion
+        else:
+            eleccion_final = eleccion
+        if eleccion_final == premio:
+            victorias += 1
+    return victorias / n_partidas
+
+# ---------- EXPERIMENTO ----------
+print("\n📌 Simulación con 10000 partidas:\n")
+n_partidas = 10000
+prob_cambiar = simular_monty_hall(n_partidas, cambiar=True)
+prob_no_cambiar = simular_monty_hall(n_partidas, cambiar=False)
+
+print(f"  Cambiar siempre:    {prob_cambiar:.4f} ({prob_cambiar*100:.2f}%)")
+print(f"  Nunca cambiar:      {prob_no_cambiar:.4f} ({prob_no_cambiar*100:.2f}%)")
+print(f"\n  Teóricas:           2/3 = {2/3:.4f}   |   1/3 = {1/3:.4f}")
+print(f"  Ventaja al cambiar: {(prob_cambiar - prob_no_cambiar)*100:.2f}% puntos más")
+
+# ---------- VISUALIZACIÓN ----------
+df_comparacion = pd.DataFrame({
+    "Estrategia": ["Cambiar siempre", "Nunca cambiar"],
+    "Prob. empírica": [prob_cambiar * 100, prob_no_cambiar * 100],
+    "Prob. teórica": [2/3 * 100, 1/3 * 100]
+})
+
+fig = go.Figure()
+fig.add_trace(go.Bar(x=df_comparacion["Estrategia"],
+                     y=df_comparacion["Prob. empírica"],
+                     name="Empírica", marker_color="#3498db",
+                     text=[f"{v:.2f}%" for v in df_comparacion["Prob. empírica"]],
+                     textposition="outside"))
+fig.add_trace(go.Bar(x=df_comparacion["Estrategia"],
+                     y=df_comparacion["Prob. teórica"],
+                     name="Teórica", marker_color="#e67e22",
+                     text=[f"{v:.2f}%" for v in df_comparacion["Prob. teórica"]],
+                     textposition="outside"))
+fig.update_layout(title="🚪 Monty Hall: Empírico vs Teórico",
+                  yaxis_title="Probabilidad de ganar (%)",
+                  height=450, barmode="group")
+fig.show()
+
+# ---------- CONVERGENCIA ----------
+print("\n📌 Convergencia de la probabilidad (Cambiar siempre):\n")
+historial_cambiar = []
+victorias_acum = 0
+for i in range(1, 2001):
+    premio = np.random.randint(0, 3)
+    eleccion = np.random.randint(0, 3)
+    opciones = [j for j in range(3) if j != eleccion and j != premio]
+    if len(opciones) == 0:
+        opciones = [j for j in range(3) if j != eleccion]
+    abierta = np.random.choice(opciones)
+    opciones_finales = [j for j in range(3) if j != eleccion and j != abierta]
+    eleccion_final = opciones_finales[0] if opciones_finales else eleccion
+    if eleccion_final == premio:
+        victorias_acum += 1
+    historial_cambiar.append(victorias_acum / i)
+
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(y=historial_cambiar, mode="lines",
+    line=dict(color="#9b59b6", width=2), name="P(ganar) acumulada"))
+fig2.add_hline(y=2/3, line_dash="dash", line_color="red",
+               annotation_text="Teórica = 2/3")
+fig2.update_layout(title="🚪 Convergencia (estrategia CAMBIAR)",
+                    xaxis_title="Partida", yaxis_title="P(ganar)",
+                    height=400)
+fig2.show()
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 6")
+print("=" * 60)
+print("""
+6.1 ¿Cuál es la probabilidad empírica de ganar CAMBIANDO? ¿Y SIN CAMBIAR?
+
+6.2 ¿Coinciden con las probabilidades teóricas (2/3 y 1/3)?
+
+6.3 Demuestra con la regla de Bayes por qué P(ganar | cambiar) = 2/3.
+
+6.4 ¿Por qué es importante que el presentador SEPA dónde está el premio
+    y SIEMPRE abra una puerta con cabra?
+""")
+```
+
+---
+
+## 📝 Celda 9 — 🎡 ESTACIÓN 7: Ruleta y Valor Esperado
+
+```python
+# ============================================================
+# 🎡 ESTACIÓN 7: Ruleta y Valor Esperado
+# ============================================================
+print("=" * 60)
+print("🎡 ESTACIÓN 7: RULETA Y VALOR ESPERADO")
+print("=" * 60)
+
+# ---------- DEFINICIÓN DE RULETAS ----------
+rojos = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36}
+
+def simular_ruleta(tipo="europea", n_tiradas=10000, apuesta="rojo"):
+    """
+    Simula N tiradas de ruleta y calcula ganancias acumuladas.
+    tipo: 'europea' (0-36) o 'americana' (0, 00, 1-36)
+    apuesta: 'rojo', 'negro', 'par', 'impar', 'numero_especifico'
+    """
+    if tipo == "europea":
+        casillas = list(range(0, 37))
+        n_casillas = 37
+    else:
+        casillas = list(range(0, 37)) + ["00"]
+        n_casillas = 38
+
+    tiradas = np.random.choice(casillas, size=n_tiradas)
+    saldo = [0]
+
+    for t in tiradas:
+        # Determinar si ganó según apuesta
+        if apuesta == "rojo":
+            gano = (t in rojos)
+            pago = 1  # paga 1:1
+        elif apuesta == "negro":
+            gano = (t not in rojos and t != 0 and t != "00")
+            pago = 1
+        elif apuesta == "par":
+            gano = (isinstance(t, int) and t != 0 and t % 2 == 0)
+            pago = 1
+        elif apuesta == "impar":
+            gano = (isinstance(t, int) and t != 0 and t % 2 == 1)
+            pago = 1
+        else:
+            gano = False
+            pago = 1
+
+        # Apuesta $1
+        if gano:
+            saldo.append(saldo[-1] + pago)
+        else:
+            saldo.append(saldo[-1] - 1)
+
+    return tiradas, saldo, n_casillas
+
+# ---------- EXPERIMENTO 7.1: APUESTA A ROJO ----------
+print("\n📌 Experimento 7.1: Apuesta $1 a ROJO (10000 tiradas)\n")
+
+for tipo in ["europea", "americana"]:
+    tiradas, saldo, n_cas = simular_ruleta(tipo, 10000, "rojo")
+    roi = saldo[-1] / 10000
+    ventaja = roi * 100
+
+    # Probabilidades teóricas
+    if tipo == "europea":
+        prob_rojo_teo = 18/37
+        roi_teo = (18/37 * 1) - (19/37 * 1)
+    else:
+        prob_rojo_teo = 18/38
+        roi_teo = (18/38 * 1) - (20/38 * 1)
+
+    print(f"  Ruleta {tipo.upper()}:")
+    print(f"    Frec. rojo:     {sum(1 for t in tiradas if t in rojos)/10000:.4f}")
+    print(f"    Prob. teórica:  {prob_rojo_teo:.4f}")
+    print(f"    ROI empírico:   {roi:.4f} ({ventaja:+.2f}%)")
+    print(f"    ROI teórico:    {roi_teo:.4f} ({roi_teo*100:+.2f}%)")
+    print()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(y=saldo, mode="lines",
+        line=dict(color="#e67e22", width=1.5), name="Saldo"))
+    fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    fig.update_layout(
+        title=f"🎡 Ruleta {tipo.title()} - Apuesta a ROJO | Saldo final = ${saldo[-1]}",
+        xaxis_title="Número de tiradas", yaxis_title="Saldo (unidades)",
+        height=400
+    )
+    fig.show()
+
+# ---------- EXPERIMENTO 7.2: DISTINTAS APUESTAS ----------
+print("\n📌 Experimento 7.2: Valor esperado con distintas apuestas (ruleta europea)\n")
+print(f"  {'Apuesta':>20} | {'ROI empírico':>15} | {'ROI teórico':>12}")
+print("-" * 55)
+
+for apuesta in ["rojo", "negro", "par", "impar"]:
+    _, saldo, _ = simular_ruleta("europea", 10000, apuesta)
+    roi = saldo[-1] / 10000
+    roi_teo = -1/37  # ventaja de la casa = 2.70%
+    print(f"  {apuesta:>20} | {roi*100:>13.3f}% | {roi_teo*100:>10.3f}%")
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 7")
+print("=" * 60)
+print("""
+7.1 Con ruleta EUROPEA (37 casillas), calcula E(ganancia) por cada $1
+    apostado a rojo. (Pista: 18 casillas rojas, 19 no rojas)
+
+7.2 ¿Cuál es la "ventaja de la casa" en ruleta europea?
+    ¿Y en ruleta americana (38 casillas)?
+
+7.3 ¿Por qué el jugador pierde a largo plazo?
+    Relaciona con la Ley de los Grandes Números.
+
+7.4 Si juegas 100 tiradas, ¿podrías salir ganando? ¿Y con 1 millón?
+    Simula ambos casos y compara.
+""")
+```
+
+---
+
+## 📝 Celda 10 — 🃏 ESTACIÓN 8: Póker y Combinatoria
+
+```python
+# ============================================================
+# 🃏 ESTACIÓN 8: Póker y Combinatoria
+# ============================================================
+print("=" * 60)
+print("🃏 ESTACIÓN 8: PÓKER Y COMBINATORIA")
+print("=" * 60)
+
+# ---------- DEFINICIONES ----------
+from math import comb
+
+VALORES = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8,
+           "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13, "A": 14}
+
+def crear_baraja():
+    return [f"{v}{p}" for v in VALORES for p in ["♠", "♥", "♦", "♣"]]
+
+def evaluar_mano(mano):
+    """Clasifica una mano de 5 cartas."""
+    valores = sorted([VALORES[c[:-1]] for c in mano], reverse=True)
+    palos = [c[-1] for c in mano]
+    cuenta = Counter(valores)
+    frec = sorted(cuenta.values(), reverse=True)
+    es_color = len(set(palos)) == 1
+    es_escalera = (valores == [14, 5, 4, 3, 2] or
+                   (len(set(valores)) == 5 and valores[0] - valores[-1] == 4))
+
+    if es_color and es_escalera and valores[0] == 14: return "Escalera Real"
+    if es_color and es_escalera: return "Escalera de Color"
+    if frec == [4, 1]: return "Póker"
+    if frec == [3, 2]: return "Full House"
+    if es_color: return "Color"
+    if es_escalera: return "Escalera"
+    if frec == [3, 1, 1]: return "Trío"
+    if frec == [2, 2, 1]: return "Doble Pareja"
+    if frec == [2, 1, 1, 1]: return "Pareja"
+    return "Carta Alta"
+
+ORDEN_MANOS = ["Escalera Real", "Escalera de Color", "Póker", "Full House",
+                "Color", "Escalera", "Trío", "Doble Pareja", "Pareja", "Carta Alta"]
+
+# Probabilidades teóricas (clásicas del póker)
+PROB_TEO = {
+    "Escalera Real": 4 / comb(52, 5),
+    "Escalera de Color": 36 / comb(52, 5),
+    "Póker": 624 / comb(52, 5),
+    "Full House": 3744 / comb(52, 5),
+    "Color": 5108 / comb(52, 5),
+    "Escalera": 10200 / comb(52, 5),
+    "Trío": 54912 / comb(52, 5),
+    "Doble Pareja": 123552 / comb(52, 5),
+    "Pareja": 1098240 / comb(52, 5),
+    "Carta Alta": 1302540 / comb(52, 5),
+}
+
+# ---------- EXPERIMENTO ----------
+print(f"\n📌 Manos posibles de 5 cartas en una baraja de 52: C(52,5) = {comb(52,5):,}\n")
+
+n_manos = 100000
+baraja = crear_baraja()
+tipos = []
+for _ in range(n_manos):
+    mano = np.random.choice(baraja, size=5, replace=False)
+    tipos.append(evaluar_mano(list(mano)))
+
+conteo = Counter(tipos)
+
+# ---------- TABLA COMPARATIVA ----------
+print(f"📌 Comparación empírico vs teórico ({n_manos:,} manos simuladas):\n")
+print(f"  {'Mano':>18} | {'Obs':>8} | {'Prob. obs':>11} | {'Prob. teo':>11} | {'Error':>10}")
+print("-" * 70)
+
+frecs_obs = []
+for tipo in ORDEN_MANOS:
+    obs = conteo.get(tipo, 0)
+    frecs_obs.append(obs)
+    p_obs = obs / n_manos
+    p_teo = PROB_TEO[tipo]
+    print(f"  {tipo:>18} | {obs:>8} | {p_obs:>11.6f} | {p_teo:>11.6f} | {abs(p_obs-p_teo):>10.6f}")
+
+# ---------- VISUALIZACIÓN ----------
+fig = grafico_comparacion_teorica(
+    ORDEN_MANOS, frecs_obs,
+    [PROB_TEO[t] for t in ORDEN_MANOS],
+    n_manos,
+    titulo=f"🃏 Póker: Observado vs Teórico ({n_manos:,} manos)")
+fig.update_xaxes(tickangle=-45)
+fig.show()
+
+# ---------- PROBABILIDAD DE TRIO O MEJOR ----------
+prob_trio_o_mejor_teo = sum(PROB_TEO[t] for t in ORDEN_MANOS[:7])  # Hasta Trío
+prob_trio_o_mejor_obs = sum(conteo.get(t, 0) for t in ORDEN_MANOS[:7]) / n_manos
+
+print(f"\n📌 Probabilidad de obtener al menos un TRÍO o mejor:")
+print(f"  Empírica: {prob_trio_o_mejor_obs:.6f}")
+print(f"  Teórica:  {prob_trio_o_mejor_teo:.6f}")
+print(f"  Diferencia: {abs(prob_trio_o_mejor_obs - prob_trio_o_mejor_teo):.6f}")
+
+print("\n" + "=" * 60)
+print("📋 PREGUNTAS DE LA ESTACIÓN 8")
+print("=" * 60)
+print("""
+8.1 ¿Cuántas manos posibles de 5 cartas hay en una baraja de 52? Usa C(52,5).
+
+8.2 Calcula MANUALMENTE cuántas formas hay de obtener "Pareja" y verifica
+    con la simulación. (Pista: C(13,1) × C(4,2) × C(12,3) × 4³)
+
+8.3 ¿Cuál es la probabilidad de obtener al menos un "Trío" o mejor?
+
+8.4 ¿Por qué la probabilidad teórica y la simulada difieren?
+    ¿Cómo se reduciría esa diferencia?
+
+8.5 Si tuvieras que apostar $10 en una sola mano, ¿qué mano elegirías
+    que aparezca? ¿Por qué?
+""")
+```
+
+---
+
+## 📄 Celda 11 — 📝 Plantilla de respuestas
+
+```python
+# ============================================================
+# 📝 PLANTILLA DE RESPUESTAS
+# ============================================================
+# Edita esta celda con tus respuestas y luego exporta el notebook
+# como PDF (Archivo → Imprimir → Guardar como PDF)
+
+respuestas = {
+    # ESTACIÓN 1
+    "1.1": "",
+    "1.2": "",
+    "1.3": "",
+    "1.4": "",
+    # ESTACIÓN 2
+    "2.1": "",
+    "2.2": "",
+    "2.3": "",
+    "2.4": "",
+    # ESTACIÓN 3
+    "3.1": "",
+    "3.2": "",
+    "3.3": "",
+    # ESTACIÓN 4
+    "4.1": "",
+    "4.2": "",
+    "4.3": "",
+    # ESTACIÓN 5
+    "5.1": "",
+    "5.2": "",
+    "5.3": "",
+    # ESTACIÓN 6
+    "6.1": "",
+    "6.2": "",
+    "6.3": "",
+    "6.4": "",
+    # ESTACIÓN 7
+    "7.1": "",
+    "7.2": "",
+    "7.3": "",
+    "7.4": "",
+    # ESTACIÓN 8
+    "8.1": "",
+    "8.2": "",
+    "8.3": "",
+    "8.4": "",
+    "8.5": "",
+}
+
+# Mostrar plantilla para imprimir
+for k, v in respuestas.items():
+    print(f"Pregunta {k}:")
+    print(f"  Respuesta: {v if v else '(pendiente)'}")
+    print()
+
+print("✍️  Edita el diccionario de arriba y completa tus respuestas.")
+print("📄  Luego: Archivo → Imprimir → Guardar como PDF para entregar.")
+```
+
+---
+
+## 📄 Celda 12 — Conclusión personal
+
+```python
+# ============================================================
+# 📝 CONCLUSIÓN PERSONAL
+# ============================================================
+# Escribe tu reflexión final:
+
+nombre = "Tu Nombre Completo"
+codigo = "Tu código estudiantil"
+fecha = "2024-XX-XX"
+
+conclusion = """
+Escribe aquí tu conclusión personal sobre el laboratorio:
+
+1. ¿Qué aprendiste en este laboratorio que no sabías?
+2. ¿Qué experimento te pareció más contra-intuitivo? ¿Por qué?
+3. ¿Cómo se relaciona la Ley de los Grandes Números con la vida real?
+4. ¿Qué aplicación tiene la probabilidad en tu carrera profesional?
+5. ¿Qué preguntas te quedaron sin responder?
+"""
+
+print("=" * 60)
+print(f"📄 REPORTE FINAL")
+print("=" * 60)
+print(f"Nombre: {nombre}")
+print(f"Código: {codigo}")
+print(f"Fecha:  {fecha}")
+print()
+print("📝 Conclusión personal:")
+print(conclusion)
+print()
+print("=" * 60)
+print("✅ ¡Laboratorio completado!")
+print("=" * 60)
+```
+
+---
+
+## 🎓 Diferencias clave con la versión Streamlit
+
+| Aspecto | Streamlit (versión anterior) | Colab puro (esta versión) |
+|---|---|---|
+| **Servidor externo** | Sí (necesita ngrok) | ❌ No |
+| **URL temporal** | Caduca al cerrar la celda | N/A |
+| **Modificar parámetros** | Usando sliders en la web | ✏️ Cambiando variables en el código |
+| **Ver el código** | Como "caja negra" | ✅ Totalmente visible |
+| **Aprender Python** | Pasivo | ✅ Activo |
+| **Exportar resultados** | Capturas manuales | ✅ PDF del notebook |
+| **Costo** | Requiere instalar ngrok, etc. | ✅ Solo Colab |
+
+---
+
+## 🎯 Flujo de la clase (90 min)
+
+| Min | Actividad |
+|---|---|
+| 0-10 | Presentación del laboratorio + abrir notebook |
+| 10-15 | Celda 1 y 2 (instalación + utilidades) |
+| 15-25 | 🪙 Estación 1 (Monedas) |
+| 25-35 | 🎲 Estación 2 (Dados) |
+| 35-45 | 📊 Estación 3 (LGN) |
+| 45-55 | 🥧 Estación 4 (Monte Carlo) |
+| 55-65 | 🎂 Estación 5 (Cumpleaños) |
+| 65-80 | 🚪 Estación 6 (Monty Hall) |
+| 80-90 | 🎡 Estación 7 (Ruleta) + cierre |
+| Tarea | 🃏 Estación 8 (Póker) + reporte |
+
+---
+
+## 📤 Instrucciones para los estudiantes
+
+> **1. Descarga el archivo `Laboratorio_Estadistica.ipynb`** que te compartió tu profesor.
+> **2. Ábrelo en Google Colab**: `Archivo → Subir notebook`.
+> **3. Ejecuta las celdas en orden**: `Runtime → Ejecutar todas` o `Shift+Enter` celda por celda.
+> **4. Anota tus respuestas** en la Celda 11 directamente.
+> **5. Exporta el notebook como PDF** al terminar: `Archivo → Imprimir → Guardar como PDF`.
+> **6. Súbelo a la plataforma** antes de la fecha límite.
+
+---
+
+## 🎁 Cómo darle el notebook a los estudiantes
+
+**Opción A**: Compartir el archivo `.ipynb` por Google Drive/Classroom.
+**Opción B**: Publicarlo como plantilla en GitHub y compartir el link de Colab:
+```
+https://colab.research.google.com/github/tu-usuario/tu-repo/blob/main/Laboratorio_Estadistica.ipynb
+```
+**Opción C**: Crear un cuaderno de Colab y compartirlo con permiso de "lector" (ellos hacen copia: `Archivo → Guardar una copia en Drive`).
+
+---
+
+¿Quieres que te prepare también:
+- 📄 **El archivo `.ipynb` completo** listo para descargar (con todas las celdas ya formateadas)?
+- 📋 **Una versión de la guía en PDF** con portada y formulario de respuestas imprimible?
+- 🎯 **Una estación 9 sobre intervalos de confianza** para cerrar el ciclo inferencial?
+- 🐍 **Ejercicios opcionales en Python puro** (sin librerías gráficas) para reforzar conceptos?
