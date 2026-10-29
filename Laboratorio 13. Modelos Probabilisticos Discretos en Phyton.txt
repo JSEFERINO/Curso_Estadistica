@@ -1,0 +1,652 @@
+Entendido. Aquí tienes la versión completa y detallada del Laboratorio 13, integrando todos los ejemplos, códigos y explicaciones del archivo PDF que adjuntaste, pero estructurado de forma clara y pedagógica para tus estudiantes.
+
+---
+
+### **Laboratorio 13: Modelos Probabilísticos Discretos en Python**
+
+**Objetivo General:**
+Aprender a utilizar Python y sus librerías científicas (NumPy, SciPy, Matplotlib) para modelar, calcular y graficar las distribuciones de probabilidad discretas más importantes: Bernoulli, Binomial, Binomial Negativa, Poisson e Hipergeométrica.
+
+**Herramientas a Utilizar:**
+- Google Colab o Jupyter Notebook
+- Python 3
+- Librerías: `numpy`, `scipy.stats`, `matplotlib.pyplot`
+
+---
+
+### **Parte 1: Preparación del Entorno**
+
+Antes de comenzar, debemos importar las librerías que nos permitirán realizar los cálculos y las gráficas.
+
+**Código para ejecutar:**
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import binom, nbinom, poisson, hypergeom
+
+print("¡Entorno listo para el laboratorio!")
+```
+
+---
+
+### **Parte 2: Función de Ayuda para Graficar**
+
+Para no repetir código, crearemos una función que nos permita graficar cualquier distribución discreta de manera sencilla. Esta función recibirá los valores posibles (eje x) y sus probabilidades (eje y).
+
+**Código para ejecutar:**
+
+```python
+# @title **A. Función para Graficar Distribuciones Discretas**
+def plot_distribution(dist_name, values, pmf, title):
+    """
+    Grafica una función de masa de probabilidad (PMF).
+    
+    Args:
+        dist_name (str): Nombre de la distribución (para referencia).
+        values (array): Valores posibles de la variable aleatoria.
+        pmf (array): Probabilidades asociadas a cada valor.
+        title (str): Título del gráfico.
+    """
+    plt.figure(figsize=(10, 6)) # Ajusta el tamaño de la figura
+    plt.bar(values, pmf, color='skyblue', edgecolor='black')
+    plt.title(title, fontsize=16)
+    plt.xlabel('Valores (k)', fontsize=12)
+    plt.ylabel('Probabilidad P(X=k)', fontsize=12)
+    plt.xticks(values) # Asegura que todos los valores del eje x se muestren
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+```
+
+---
+
+### **Parte 3: Exploración de Modelos Probabilísticos Discretos**
+
+A continuación, exploraremos cada distribución con un ejemplo práctico.
+
+#### **3.1. Distribución de Bernoulli**
+
+**Definición:** Modela un experimento con dos únicos resultados posibles: "éxito" (1) o "fracaso" (0). La probabilidad de éxito se denota como *p*.
+
+- **Función de Probabilidad:** $P(X=k) = p^k (1-p)^{1-k}$, para $k = 0, 1$.
+- **Media (Esperanza):** $E(X) = p$
+- **Varianza:** $Var(X) = p(1-p)$
+
+**Ejemplo:** Lanzamiento de una moneda una vez. Sea X = 1 si sale cara, 0 si sale sello. Sea $p=0.5$ la probabilidad de obtener cara.
+
+**Código para ejecutar:**
+
+```python
+# @title **B1. Ejemplo de Distribución de Bernoulli**
+n_bernoulli = 1 # Un solo ensayo
+p_bernoulli = 0.5 # Probabilidad de éxito (cara)
+
+x_bernoulli = np.arange(0, n_bernoulli + 1)
+pmf_bernoulli = binom.pmf(x_bernoulli, n_bernoulli, p_bernoulli)
+
+plot_distribution("Bernoulli", x_bernoulli, pmf_bernoulli, f"Distribución de Bernoulli (p={p_bernoulli})")
+print(f"Media (Esperanza): {n_bernoulli * p_bernoulli}")
+print(f"Varianza: {n_bernoulli * p_bernoulli * (1 - p_bernoulli)}")
+```
+
+---
+
+#### **3.2. Distribución Binomial**
+
+**Definición:** Modela el número de éxitos en *n* ensayos independientes de Bernoulli. Cada ensayo tiene una probabilidad de éxito *p*.
+
+- **Función de Probabilidad:** $P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}$, donde $\binom{n}{k}$ es el coeficiente binomial.
+- **Media (Esperanza):** $E(X) = n \cdot p$
+- **Varianza:** $Var(X) = n \cdot p \cdot (1-p)$
+
+**Ejemplo:** Lanzar una moneda 10 veces. Sea X = número de caras. $n=10$, $p=0.5$.
+
+**Código para ejecutar:**
+
+```python
+# @title **B2. Ejemplo de Distribución Binomial**
+n_binom = 10 # Número de ensayos
+p_binom = 0.5 # Probabilidad de éxito en cada ensayo
+
+x_binom = np.arange(0, n_binom + 1)
+pmf_binom = binom.pmf(x_binom, n_binom, p_binom)
+
+plot_distribution("Binomial", x_binom, pmf_binom, f"Distribución Binomial (n={n_binom}, p={p_binom})")
+print(f"Media (Esperanza): {n_binom * p_binom}")
+print(f"Varianza: {n_binom * p_binom * (1 - p_binom)}")
+```
+
+**Ejemplo 1 (del PDF):** Supongamos que lanzamos una moneda justa (probabilidad de éxito p=0.5), n=10 veces. ¿Cuál es la probabilidad de obtener exactamente 6 caras?
+
+```python
+# @title **Ejemplo 1. Probabilidad de obtener exactamente 6 caras**
+n = 10 # Número de ensayos
+p = 0.5 # Probabilidad de éxito
+k = 6 # Número de éxitos
+
+# Probabilidad de obtener exactamente 6 caras
+prob_binom_1 = binom.pmf(k, n, p)
+print(f"Probabilidad de obtener exactamente 6 caras: P(X = 6) = {prob_binom_1:.5f}")
+
+# Gráfica de la Distribución Binomial
+x_binom = np.arange(0, n + 1)
+pmf_binom = binom.pmf(x_binom, n, p)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_binom, pmf_binom)
+plt.title("Distribución Binomial")
+plt.xlabel('Valores')
+plt.ylabel('Probabilidad')
+
+# Resaltar la barra de P(X = 6) en rojo
+plt.bar(k, prob_binom_1, color='red')
+
+# Agregar texto dentro del rectángulo rojo con la probabilidad
+plt.text(k+1, prob_binom_1, f"P(X = 6) = {prob_binom_1:.5f}", ha='center', va='bottom')
+
+plt.show()
+```
+
+**Ejemplo 2 (del PDF):** La probabilidad de que una pieza fabricada por una empresa sea defectuosa es 0.1. Halla la probabilidad de que en una muestra de 25 piezas se encuentren a lo sumo cuatro piezas defectuosas. Haz un gráfico y sombrea P(X <= 4) cada rectángulo con rojo y dentro del gráfico coloca P(X <= 4).
+
+```python
+# @title **Ejemplo 2. Probabilidad de a lo sumo 4 piezas defectuosas**
+n = 25 # Número de piezas
+p = 0.1 # Probabilidad de que una pieza sea defectuosa
+k = np.arange(0, n - 14) # Número de piezas defectuosas posibles
+
+# Calcula la probabilidad de obtener exactamente k piezas defectuosas
+probabilidades = binom.pmf(k, n, p)
+
+# Calcula la probabilidad de que haya a lo sumo 4 piezas defectuosas (P(X <= 4))
+probabilidad_acumulada = binom.cdf(4, n, p)
+
+# Crea la gráfica de la distribución binomial
+plt.figure(figsize=(10, 6))
+plt.bar(k, probabilidades)
+plt.title('Distribución Binomial')
+plt.xlabel('Número de piezas defectuosas (X)')
+plt.ylabel('Probabilidad')
+plt.grid(True)
+
+# Sobrescribe P(X <= 4) con rojo
+for i in range(5):
+    plt.bar(i, probabilidades[i], color='red')
+
+# Agrega el valor de P(X <= 4) al gráfico
+plt.text(4, 0.2, f"P(X <= 4) = {probabilidad_acumulada:.5f}", fontsize=12, color='black')
+
+plt.show()
+print(f"La probabilidad de que en una muestra de 25 piezas se encuentren a lo sumo 4 defectuosas es: {probabilidad_acumulada:.5f}")
+```
+
+**Ejemplo 3 (del PDF):** El 60% de los Psicólogos de una facultad encuentran trabajo el primer año después de acabar la carrera. De los 100 Psicólogos en un curso, ¿Cuántos se espera que se coloque en el primer año? ¿Cuál es la varianza?
+
+```python
+# @title **Ejemplo 3. Número esperado de psicólogos que encuentran trabajo**
+n = 100 # Número total de psicólogos
+p = 0.6 # Probabilidad de encontrar trabajo en el primer año
+
+# Calcular el número esperado de psicólogos que encontrarán trabajo
+esperanza_binom = n * p
+
+# Calcular la varianza
+varianza_binom = n * p * (1 - p)
+
+print(f"Se espera que {esperanza_binom:.0f} psicólogos encuentren trabajo en el primer año.")
+print(f"La varianza es: {varianza_binom:.2f}")
+```
+
+**Ejemplo 4 (del PDF):** Suponiendo que el 40% de los Comunicadores Sociales tengan Rh-, si tomamos una muestra de siete Comunicadores Sociales, (a) ¿Qué probabilidad hay de que todas sean Rh-? (b) ¿Y de que máximo cuatro sean Rh-? Haz un gráfico y sombrea P(X <= 4) cada rectángulo con rojo y dentro del gráfico coloca P(X <= 4) y en otro gráfico sombrea P(X = 7).
+
+```python
+# @title **Ejemplo 4. Probabilidades con Rh-**
+n = 7 # Número de comunicadores sociales en la muestra
+p = 0.4 # Probabilidad de que un comunicador social tenga Rh-
+
+# (a) Probabilidad de que todas sean Rh-
+prob_todas_rh_neg = binom.pmf(n, n, p)
+print(f"Probabilidad de que todas sean Rh-: P(X = 7) = {prob_todas_rh_neg:.5f}")
+
+# Gráfico sombreando P(X = 7)
+x_binom = np.arange(0, n + 1)
+pmf_binom = binom.pmf(x_binom, n, p)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_binom, pmf_binom)
+plt.title('Distribución Binomial - P(X = 7)')
+plt.xlabel('Número de comunicadores sociales con Rh-')
+plt.ylabel('Probabilidad')
+
+plt.bar(7, prob_todas_rh_neg, color='red')
+plt.text(7, prob_todas_rh_neg + 0.01, f"P(X = 7) = {prob_todas_rh_neg:.5f}", fontsize=12)
+
+plt.show()
+
+# (b) Probabilidad de que máximo cuatro sean Rh-
+prob_maximo_cuatro_rh_neg = binom.cdf(4, n, p)
+print(f"Probabilidad de que máximo cuatro sean Rh-: P(X <= 4) = {prob_maximo_cuatro_rh_neg:.5f}")
+
+# Gráfico sombreando P(X <= 4)
+plt.figure(figsize=(10, 6))
+plt.bar(x_binom, pmf_binom)
+plt.title('Distribución Binomial - P(X <= 4)')
+plt.xlabel('Número de comunicadores sociales con Rh-')
+plt.ylabel('Probabilidad')
+
+for i in range(5):
+    plt.bar(i, pmf_binom[i], color='red')
+
+plt.text(4, 0.1, f"P(X <= 4) = {prob_maximo_cuatro_rh_neg:.5f}", fontsize=12, color='black')
+
+plt.show()
+```
+
+**Ejemplo 5 (del PDF):** Un laboratorio ha comprobado que el 25% de los que toman un determinado antibiótico sufren efectos secundarios. De una muestra de ocho enfermos que toman dicho antibiótico, halla la probabilidad de que sufran efectos secundarios al menos tres.
+
+```python
+# @title **Ejemplo 5. Probabilidad de al menos 3 efectos secundarios**
+p = 0.25 # Probabilidad de sufrir efectos secundarios
+n = 8 # Número de enfermos en la muestra
+
+# Calcular la probabilidad de que al menos tres sufran efectos secundarios
+# P(X >= 3) = 1 - P(X < 3) = 1 - [P(X = 0) + P(X = 1) + P(X = 2)]
+prob_al_menos_tres = 1 - binom.cdf(2, n, p)
+
+print(f"La probabilidad de que al menos tres enfermos sufran efectos secundarios es: {prob_al_menos_tres:.5f}")
+
+# Gráfico sombreando P(X >= 3)
+x_binom = np.arange(0, n + 1)
+pmf_binom = binom.pmf(x_binom, n, p)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_binom, pmf_binom)
+plt.title('Distribución Binomial - P(X >= 3)')
+plt.xlabel('Número de enfermos con efectos secundarios')
+plt.ylabel('Probabilidad')
+
+for i in range(3, n + 1):
+    plt.bar(i, pmf_binom[i], color='red')
+
+plt.text(5, 0.1, f"P(X >= 3) = {prob_al_menos_tres:.5f}", fontsize=12, color='black')
+plt.show()
+```
+
+**Ejemplo 6 (del PDF):** Un laboratorio ha comprobado que el 25% de los que toman un determinado antibiótico sufren efectos secundarios. De una muestra de ocho enfermos que toman dicho antibiótico, halla la probabilidad de que sufran efectos secundarios menos de 3.
+
+```python
+# @title **Ejemplo 6. Probabilidad de menos de 3 efectos secundarios**
+p = 0.25 # Probabilidad de sufrir efectos secundarios
+n = 8 # Número de enfermos en la muestra
+
+# Calcular la probabilidad de que menos de 3 sufran efectos secundarios
+# P(X < 3) = P(X = 0) + P(X = 1) + P(X = 2)
+prob_menos_de_tres = binom.cdf(2, n, p)
+
+print(f"La probabilidad de que menos de 3 enfermos sufran efectos secundarios es: {prob_menos_de_tres:.5f}")
+
+# Gráfico sombreando P(X < 3)
+x_binom = np.arange(0, n + 1)
+pmf_binom = binom.pmf(x_binom, n, p)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_binom, pmf_binom)
+plt.title('Distribución Binomial - P(X < 3)')
+plt.xlabel('Número de enfermos con efectos secundarios')
+plt.ylabel('Probabilidad')
+
+for i in range(3):
+    plt.bar(i, pmf_binom[i], color='red')
+
+plt.text(2, 0.1, f"P(X < 3) = {prob_menos_de_tres:.5f}", fontsize=12, color='black')
+plt.show()
+```
+
+---
+
+#### **3.3. Distribución Binomial Negativa**
+
+**Definición:** Modela el número de ensayos de Bernoulli necesarios para obtener un número fijo de éxitos (*r*).
+
+- **Función de Probabilidad:** $P(X=k) = \binom{k-1}{r-1} p^r (1-p)^{k-r}$, para $k = r, r+1, \dots$
+- **Media (Esperanza):** $E(X) = r / p$
+- **Varianza:** $Var(X) = r(1-p) / p^2$
+
+**Ejemplo 1 (del PDF):** ¿Cuál es la probabilidad de obtener 5 éxitos antes de 3 fracasos si la probabilidad de éxito es p = 0.7?
+
+```python
+# @title **Ejemplo 1. Probabilidad de 5 éxitos antes de 3 fracasos**
+r = 5 # Número de éxitos
+p = 0.7 # Probabilidad de éxito
+k = 3 # Número de fracasos antes de obtener 5 éxitos
+
+# Probabilidad
+prob_nbinom_1 = nbinom.pmf(k, r, p)
+print(f"Probabilidad de obtener 5 éxitos antes de 3 fracasos: P(X=5) = {prob_nbinom_1:.5f}")
+
+# Momentos
+esperanza_nbinom = r * (1 - p) / p
+varianza_nbinom = r * (1 - p) / (p ** 2)
+desviacion_nbinom = np.sqrt(varianza_nbinom)
+
+print(f"\nMomentos en el Modelo Binomial Negativo")
+print(f"Esperanza:E(X) = {esperanza_nbinom:.2f}")
+print(f"Varianza: V(X) = {varianza_nbinom:.2f}")
+print(f"Desviación estándar: {desviacion_nbinom:.2f}")
+```
+
+**Ejemplo 2 (del PDF):** La probabilidad de un niño expuesto al COVID-19 se contagie es de 0.6. ¿Cuál es la probabilidad de que el 10° niño expuesto sea el tercero en contraerla?
+
+```python
+# @title **Ejemplo 2. Probabilidad de que el 10° niño sea el tercero en contagiarse**
+n = 10 # Número de ensayos
+r = 3 # Número de éxitos
+p = 0.6 # Probabilidad de éxito
+k = n - r # Número de fracasos antes de obtener 3 éxitos
+
+# Probabilidad
+prob_nbinom_2 = nbinom.pmf(k, r, p)
+print(f"Probabilidad de que el 10° niño sea el tercero en contagiarse: {prob_nbinom_2:.5f}")
+```
+
+---
+
+#### **3.4. Distribución de Poisson**
+
+**Definición:** Modela el número de eventos que ocurren en un intervalo de tiempo o espacio, dado un promedio de ocurrencia ($\lambda$).
+
+- **Función de Probabilidad:** $P(X=k) = \frac{\lambda^k e^{-\lambda}}{k!}$, para $k = 0, 1, 2, \dots$
+- **Media (Esperanza):** $E(X) = \lambda$
+- **Varianza:** $Var(X) = \lambda$
+
+**Ejemplo 1 (del PDF):** Una central telefónica recibe en promedio 2 llamadas por minuto. ¿Cuál es la probabilidad de que en un minuto se reciban exactamente 3 llamadas?
+
+```python
+# @title **Ejemplo 1. Probabilidad de recibir exactamente 3 llamadas**
+lambda_poisson = 2 # Tasa promedio de ocurrencia
+k = 3 # Número de eventos (llamadas)
+
+# Probabilidad
+prob_poisson_1 = poisson.pmf(k, lambda_poisson)
+print(f"Probabilidad de recibir exactamente 3 llamadas: P(X=3) = {prob_poisson_1:.5f}")
+
+# Gráfico sombreando P(X=3)
+x_poisson = np.arange(0, 15)
+pmf_poisson = poisson.pmf(x_poisson, lambda_poisson)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson, pmf_poisson)
+plt.title('Distribución de Poisson - P(X=3)')
+plt.xlabel('Número de eventos')
+plt.ylabel('Probabilidad')
+
+plt.bar(3, prob_poisson_1, color='red')
+plt.text(3, prob_poisson_1 + 0.01, f"P(X=3) = {prob_poisson_1:.5f}", fontsize=12)
+plt.show()
+```
+
+**Ejemplo 2 (del PDF):** En la zona que rodea un punto kilométrico de una autovía hay una población de erizos. Se ha realizado un estudio por el que se ha deducido que los erizos cruzan la autovía a razón de 4 cada 30 minutos. La probabilidad de que 6 o más erizos crucen la autovía en una hora es: Dibuja la distribución de Poisson y sombrea el rectángulo con P(X>=6).
+
+```python
+# @title **Ejemplo 2. Probabilidad de 6 o más erizos en una hora**
+lambda_poisson = 8 # Tasa promedio de erizos que cruzan en una hora (4 erizos/30min * 2)
+prob_6_o_mas = 1 - poisson.cdf(5, lambda_poisson) # P(X >= 6) = 1 - P(X <= 5)
+
+print(f"La probabilidad de que 6 o más erizos crucen la autovía en una hora es: {prob_6_o_mas:.5f}")
+
+# Gráfico sombreando P(X >= 6)
+x_poisson = np.arange(0, 20)
+pmf_poisson = poisson.pmf(x_poisson, lambda_poisson)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson, pmf_poisson)
+plt.title('Distribución de Poisson - P(X ≥ 6)')
+plt.xlabel('Número de erizos que cruzan')
+plt.ylabel('Probabilidad')
+
+for i in range(6, 20):
+    plt.bar(i, pmf_poisson[i], color='red')
+
+plt.text(10, 0.05, f"P(X ≥ 6) = {prob_6_o_mas:.5f}", fontsize=12, color='black')
+plt.show()
+```
+
+**Ejemplo 3 (del PDF):** En una carretera se producen un promedio de 2 accidentes anuales. Calcula la probabilidad de que estos cinco años se produzcan más de 3 accidentes.
+
+```python
+# @title **Ejemplo 3. Probabilidad de más de 3 accidentes en 5 años**
+lambda_poisson = 2 # Promedio de accidentes por año
+lambda_5_years = lambda_poisson * 5 # Tasa promedio de accidentes en 5 años
+
+# Calcular la probabilidad de que en 5 años se produzcan más de 3 accidentes
+prob_mas_de_3 = 1 - poisson.cdf(3, lambda_5_years) # P(X > 3) = 1 - P(X <= 3)
+
+# Configuración del gráfico
+fig, ax = plt.subplots(figsize=(8, 6))
+x_poisson = np.arange(0, 25)
+pmf_poisson = poisson.pmf(x_poisson, lambda_5_years)
+bars = ax.bar(x_poisson, pmf_poisson, color='gray')
+
+# Colorear de rojo los valores donde X > 3
+for i, bar in enumerate(bars):
+    if i > 3:
+        bar.set_color('red')
+
+ax.set_title('Distribución de Poisson - Probabilidad de más de 3 accidentes en 5 años')
+ax.set_xlabel('Número de accidentes en 5 años')
+ax.set_ylabel('Probabilidad')
+ax.text(10, 0.05, f"P(X > 3) = {prob_mas_de_3:.5f}", fontsize=12, color='green')
+
+plt.show()
+```
+
+**Ejemplo 4 (del PDF):** En la hora punta de la mañana en un semáforo pasan una media de 10 coches por minuto. ¿Cuál es la probabilidad de que pasen exactamente 16 coches en 2 minutos?
+
+```python
+# @title **Ejemplo 4. Probabilidad de 16 coches en 2 minutos**
+lambda_poisson = 10 * 2 # Tasa promedio de coches en 2 minutos
+k = 16 # Número de coches que queremos calcular la probabilidad
+
+# Probabilidad de que pasen exactamente 16 coches en 2 minutos
+prob_poisson = poisson.pmf(k, lambda_poisson)
+print(f"La probabilidad de que pasen exactamente 16 coches en 2 minutos es: {prob_poisson:.5f}")
+
+# Gráfico sombreando P(X=16)
+x_poisson = np.arange(0, 40)
+pmf_poisson = poisson.pmf(x_poisson, lambda_poisson)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson, pmf_poisson)
+plt.title('Distribución de Poisson - P(X=16)')
+plt.xlabel('Número de coches')
+plt.ylabel('Probabilidad')
+
+plt.bar(k, prob_poisson, color='red')
+plt.text(k-2, prob_poisson + 0.001, f"P(X=16) = {prob_poisson:.5f}", fontsize=12)
+plt.show()
+```
+
+**Ejemplo 5 (del PDF):** Si un banco recibe en promedio 6 cheques sin fondo por día, ¿cuáles son las probabilidades de que reciba: a. cuatro cheques sin fondo en un día dado, b. cincuenta cheques sin fondo en una semana, c. diez cheques sin fondo en 12 horas, d. 5 cheques sin fondos en 4 horas?
+
+```python
+# @title **Ejemplo 5. Probabilidades con cheques sin fondo**
+lambda_dia = 6 # Promedio de cheques sin fondo por día
+
+# a. Cuatro cheques sin fondo en un día dado
+k_a = 4
+prob_a = poisson.pmf(k_a, lambda_dia)
+print(f"a. Probabilidad de 4 cheques sin fondo en un día: {prob_a:.5f}")
+
+# Gráfico para a.
+x_poisson_a = np.arange(0, 15)
+pmf_poisson_a = poisson.pmf(x_poisson_a, lambda_dia)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson_a, pmf_poisson_a)
+plt.title('Distribución de Poisson - P(X=4)')
+plt.xlabel('Número de cheques sin fondo')
+plt.ylabel('Probabilidad')
+plt.bar(k_a, prob_a, color='red')
+plt.text(k_a, prob_a + 0.01, f"P(X=4) = {prob_a:.5f}", fontsize=12)
+plt.show()
+
+# b. Cincuenta cheques sin fondo en una semana
+lambda_semana = lambda_dia * 7
+k_b = 50
+prob_b = poisson.pmf(k_b, lambda_semana)
+print(f"b. Probabilidad de 50 cheques sin fondo en una semana: {prob_b:.5f}")
+
+# Gráfico para b.
+x_poisson_b = np.arange(0, 70)
+pmf_poisson_b = poisson.pmf(x_poisson_b, lambda_semana)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson_b, pmf_poisson_b)
+plt.title('Distribución de Poisson - P(X=50)')
+plt.xlabel('Número de cheques sin fondo')
+plt.ylabel('Probabilidad')
+plt.bar(k_b, prob_b, color='red')
+plt.text(k_b, prob_b + 0.0001, f"P(X=50) = {prob_b:.5f}", fontsize=12)
+plt.show()
+
+# c. Diez cheques sin fondo en 12 horas
+lambda_12horas = lambda_dia * 0.5
+k_c = 10
+prob_c = poisson.pmf(k_c, lambda_12horas)
+print(f"c. Probabilidad de 10 cheques sin fondo en 12 horas: {prob_c:.5f}")
+
+# Gráfico para c.
+x_poisson_c = np.arange(0, 20)
+pmf_poisson_c = poisson.pmf(x_poisson_c, lambda_12horas)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson_c, pmf_poisson_c)
+plt.title('Distribución de Poisson - P(X=10)')
+plt.xlabel('Número de cheques sin fondo')
+plt.ylabel('Probabilidad')
+plt.bar(k_c, prob_c, color='red')
+plt.text(k_c, prob_c + 0.01, f"P(X=10) = {prob_c:.5f}", fontsize=12)
+plt.show()
+
+# d. 5 cheques sin fondos en 4 horas
+lambda_4horas = lambda_dia * (4/24)
+k_d = 5
+prob_d = poisson.pmf(k_d, lambda_4horas)
+print(f"d. Probabilidad de 5 cheques sin fondo en 4 horas: {prob_d:.5f}")
+
+# Gráfico para d.
+x_poisson_d = np.arange(0, 15)
+pmf_poisson_d = poisson.pmf(x_poisson_d, lambda_4horas)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson_d, pmf_poisson_d)
+plt.title('Distribución de Poisson - P(X=5)')
+plt.xlabel('Número de cheques sin fondo')
+plt.ylabel('Probabilidad')
+plt.bar(k_d, prob_d, color='red')
+plt.text(k_d, prob_d + 0.01, f"P(X=5) = {prob_d:.5f}", fontsize=12)
+plt.show()
+```
+
+**Ejemplo 6 (del PDF):** En una empresa el término medio de accidentes es de 5 por mes. Calcular la probabilidad de que como mínimo ocurran 2 accidentes en un mes.
+
+```python
+# @title **Ejemplo 6. Probabilidad de al menos 2 accidentes en un mes**
+lambda_poisson = 5 # Tasa promedio de accidentes por mes
+
+# La probabilidad de que ocurran como mínimo 2 accidentes es
+# P(X >= 2) = 1 - P(X < 2) = 1 - [P(X = 0) + P(X = 1)]
+prob_poisson_0 = poisson.pmf(0, lambda_poisson)
+prob_poisson_1 = poisson.pmf(1, lambda_poisson)
+prob_al_menos_2 = 1 - (prob_poisson_0 + prob_poisson_1)
+
+print(f"La probabilidad de que ocurran como mínimo 2 accidentes en un mes es: {prob_al_menos_2:.5f}")
+
+# Gráfico
+x_poisson = np.arange(0, 15)
+pmf_poisson = poisson.pmf(x_poisson, lambda_poisson)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson, pmf_poisson, color='blue')
+for i in range(2, len(x_poisson)):
+    plt.bar(x_poisson[i], pmf_poisson[i], color='red')
+
+plt.title("Distribución de Poisson: Número de accidentes en un mes")
+plt.xlabel("Número de accidentes")
+plt.ylabel("Probabilidad")
+plt.text(8, 0.08, f"P(X≥2) = {prob_al_menos_2:.5f}", fontsize=12, color='green')
+plt.show()
+```
+
+**Ejemplo 7 (del PDF):** En una empresa el término medio de accidentes es de 5 por mes. Calcular la probabilidad de que ocurran 8 accidentes en un trimestre.
+
+```python
+# @title **Ejemplo 7. Probabilidad de 8 accidentes en un trimestre**
+lambda_poisson = 5 * 3 # Tasa promedio de accidentes por trimestre
+k = 8 # Número de accidentes
+
+# La probabilidad de que ocurran exactamente 8 accidentes en un trimestre es P(X = 8)
+prob_poisson_8 = poisson.pmf(k, lambda_poisson)
+print(f"La probabilidad de que ocurran 8 accidentes en un trimestre es: {prob_poisson_8:.5f}")
+
+# Gráfico
+x_poisson = np.arange(0, 25)
+pmf_poisson = poisson.pmf(x_poisson, lambda_poisson)
+
+plt.figure(figsize=(10, 6))
+plt.bar(x_poisson, pmf_poisson, color='blue')
+plt.bar(k, prob_poisson_8, color='red')
+plt.title("Distribución de Poisson: Número de accidentes en un trimestre")
+plt.xlabel("Número de accidentes")
+plt.ylabel("Probabilidad")
+plt.text(0, 0.08, f"En rojo, P(X=8) = {prob_poisson_8:.5f}", fontsize=12, color='green')
+plt.show()
+```
+
+---
+
+#### **3.5. Distribución Hipergeométrica**
+
+**Definición:** Modela el número de éxitos en una muestra de tamaño *n*, extraída **sin reemplazo** de una población finita de tamaño *N*, que contiene *K* éxitos.
+
+- **Función de Probabilidad:** $P(X=k) = \frac{\binom{K}{k} \binom{N-K}{n-k}}{\binom{N}{n}}$, donde *k* está limitado por $\max(0, n+K-N) \le k \le \min(n, K)$.
+- **Media (Esperanza):** $E(X) = n \cdot \frac{K}{N}$
+- **Varianza:** $Var(X) = n \cdot \frac{K}{N} \cdot \left(1 - \frac{K}{N}\right) \cdot \frac{N-n}{N-1}$
+
+**Ejemplo 1 (del PDF):** Una urna contiene 10 bolas rojas y 20 bolas azules. Se seleccionan 5 bolas sin reemplazo. ¿Cuál es la probabilidad de seleccionar exactamente 3 bolas rojas?
+
+```python
+# @title **Ejemplo 1. Probabilidad de seleccionar exactamente 3 bolas rojas**
+N = 30 # Tamaño de la población (total de bolas)
+K = 10 # Número de éxitos en la población (bolas rojas)
+n = 5 # Tamaño de la muestra
+k = 3 # Número de éxitos en la muestra (bolas rojas)
+
+# Probabilidad
+prob_hyper_1 = hypergeom.pmf(k, N, K, n)
+print(f"Probabilidad de seleccionar exactamente 3 bolas rojas: P(X=3) = {prob_hyper_1:.5f}")
+
+# Momentos
+esperanza_hyper = n * (K / N)
+varianza_hyper = n * (K / N) * ((N - K) / N) * ((N - n) / (N - 1))
+desviacion_hyper = np.sqrt(varianza_hyper)
+
+print(f"\nMomentos en el Modelo Hipergeométrico")
+print(f"Esperanza:E(X) = {esperanza_hyper:.2f}")
+print(f"Varianza: V(X) = {varianza_hyper:.2f}")
+print(f"Desviación estándar: {desviacion_hyper:.2f}")
+```
+
+---
+
+### **Parte 4: Ejercicios Propuestos**
+
+Resuelve los siguientes problemas utilizando el código que has aprendido. Para cada uno, calcula la probabilidad y grafica la distribución.
+
+1.  **Binomial:** Un estudiante responde un examen de 15 preguntas de opción múltiple (4 opciones cada una) al azar. ¿Cuál es la probabilidad de que acierte exactamente 6 preguntas? ¿Y de que acierte 5 o menos?
+2.  **Poisson:** En un sitio web, se reciben en promedio 3 visitas por minuto. ¿Cuál es la probabilidad de recibir exactamente 5 visitas en un minuto? ¿Y de recibir 2 o menos?
+3.  **Hipergeométrica:** Un lote de 50 piezas contiene 10 defectuosas. Se seleccionan 8 piezas al azar sin reemplazo. ¿Cuál es la probabilidad de encontrar exactamente 2 defectuosas en la muestra?
+4.  **Binomial Negativa:** Una máquina produce piezas con una probabilidad de defecto del 5%. ¿Cuál es la probabilidad de que la tercera pieza defectuosa sea la décima producida?
+
+**Entregable:**
+Comparte tu notebook de Google Colab con los ejercicios resueltos y sus respectivas gráficas.
