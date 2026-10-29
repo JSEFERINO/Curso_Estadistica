@@ -1,0 +1,550 @@
+# **Laboratorio 14: Modelos Probabilísticos Discretos en R**
+
+**Objetivo General:**
+Aprender a utilizar R y sus funciones estadísticas base (junto con `ggplot2` para gráficas) para modelar, calcular y graficar las distribuciones de probabilidad discretas más importantes: Bernoulli, Binomial, Binomial Negativa, Poisson e Hipergeométrica.
+
+**Herramientas a Utilizar:**
+- RStudio o Google Colab (kernel de R)
+- R 4.x
+- Paquetes: `ggplot2`, `dplyr`
+
+---
+
+### **Parte 1: Preparación del Entorno**
+
+Antes de comenzar, debemos cargar las librerías que nos permitirán realizar los cálculos y las gráficas.
+
+**Código para ejecutar:**
+
+```r
+# install.packages(c("ggplot2", "dplyr"))  # Ejecutar solo la primera vez
+
+library(ggplot2)
+library(dplyr)
+
+cat("¡Entorno listo para el laboratorio!\n")
+```
+
+---
+
+### **Parte 2: Función de Ayuda para Graficar**
+
+Para no repetir código, crearemos una función que nos permita graficar cualquier distribución discreta de manera sencilla. Esta función recibirá los valores posibles (eje x), sus probabilidades (eje y) y, opcionalmente, qué barras resaltar.
+
+**Código para ejecutar:**
+
+```r
+# @title **A. Función para Graficar Distribuciones Discretas**
+plot_distribution <- function(values, pmf, title, highlight = NULL,
+                              highlight_color = "red", label = NULL) {
+  df <- data.frame(k = values, prob = pmf)
+
+  p <- ggplot(df, aes(x = factor(k), y = prob)) +
+    geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+    labs(title = title, x = "Valores (k)", y = "Probabilidad P(X=k)") +
+    theme_minimal(base_size = 14) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+          axis.text.x = element_text(size = 9))
+
+  if (!is.null(highlight)) {
+    df_high <- df %>% filter(k %in% highlight)
+    p <- p + geom_bar(data = df_high, aes(x = factor(k), y = prob),
+                      stat = "identity", fill = highlight_color, color = "black")
+  }
+
+  if (!is.null(label)) {
+    p <- p + annotate("text", x = length(values)/2, y = max(pmf) * 0.9,
+                      label = label, size = 5, color = "darkgreen")
+  }
+
+  print(p)
+}
+```
+
+---
+
+### **Parte 3: Exploración de Modelos Probabilísticos Discretos**
+
+A continuación, exploraremos cada distribución con un ejemplo práctico.
+
+#### **3.1. Distribución de Bernoulli**
+
+**Definición:** Modela un experimento con dos únicos resultados posibles: "éxito" (1) o "fracaso" (0). La probabilidad de éxito se denota como *p*.
+
+- **Función de Probabilidad:** $P(X=k) = p^k (1-p)^{1-k}$, para $k = 0, 1$.
+- **Media (Esperanza):** $E(X) = p$
+- **Varianza:** $Var(X) = p(1-p)$
+
+**Ejemplo:** Lanzamiento de una moneda una vez. Sea X = 1 si sale cara, 0 si sale sello. Sea $p=0.5$ la probabilidad de obtener cara.
+
+**Código para ejecutar:**
+
+```r
+# @title **B1. Ejemplo de Distribución de Bernoulli**
+n_bernoulli <- 1   # Un solo ensayo
+p_bernoulli <- 0.5 # Probabilidad de éxito (cara)
+
+x_bernoulli <- 0:n_bernoulli
+pmf_bernoulli <- dbinom(x_bernoulli, n_bernoulli, p_bernoulli)
+
+plot_distribution(x_bernoulli, pmf_bernoulli,
+                  sprintf("Distribución de Bernoulli (p=%.1f)", p_bernoulli))
+cat(sprintf("Media (Esperanza): %.2f\n", n_bernoulli * p_bernoulli))
+cat(sprintf("Varianza: %.2f\n", n_bernoulli * p_bernoulli * (1 - p_bernoulli)))
+```
+
+---
+
+#### **3.2. Distribución Binomial**
+
+**Definición:** Modela el número de éxitos en *n* ensayos independientes de Bernoulli. Cada ensayo tiene una probabilidad de éxito *p*.
+
+- **Función de Probabilidad:** $P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}$
+- **Media (Esperanza):** $E(X) = n \cdot p$
+- **Varianza:** $Var(X) = n \cdot p \cdot (1-p)$
+
+**Ejemplo:** Lanzar una moneda 10 veces. Sea X = número de caras. $n=10$, $p=0.5$.
+
+**Código para ejecutar:**
+
+```r
+# @title **B2. Ejemplo de Distribución Binomial**
+n_binom <- 10
+p_binom <- 0.5
+
+x_binom <- 0:n_binom
+pmf_binom <- dbinom(x_binom, n_binom, p_binom)
+
+plot_distribution(x_binom, pmf_binom,
+                  sprintf("Distribución Binomial (n=%d, p=%.1f)", n_binom, p_binom))
+cat(sprintf("Media (Esperanza): %.2f\n", n_binom * p_binom))
+cat(sprintf("Varianza: %.2f\n", n_binom * p_binom * (1 - p_binom)))
+```
+
+**Ejemplo 1 (del PDF):** Supongamos que lanzamos una moneda justa (probabilidad de éxito p=0.5), n=10 veces. ¿Cuál es la probabilidad de obtener exactamente 6 caras?
+
+```r
+# @title **Ejemplo 1. Probabilidad de obtener exactamente 6 caras**
+n <- 10; p <- 0.5; k <- 6
+
+prob_binom_1 <- dbinom(k, n, p)
+cat(sprintf("Probabilidad de obtener exactamente 6 caras: P(X = 6) = %.5f\n", prob_binom_1))
+
+plot_distribution(0:n, dbinom(0:n, n, p),
+                  "Distribución Binomial - P(X=6)",
+                  highlight = k,
+                  label = sprintf("P(X = 6) = %.5f", prob_binom_1))
+```
+
+**Ejemplo 2 (del PDF):** La probabilidad de que una pieza fabricada por una empresa sea defectuosa es 0.1. Halla la probabilidad de que en una muestra de 25 piezas se encuentren a lo sumo cuatro piezas defectuosas. Haz un gráfico y sombrea P(X <= 4) cada rectángulo con rojo y dentro del gráfico coloca P(X <= 4).
+
+```r
+# @title **Ejemplo 2. Probabilidad de a lo sumo 4 piezas defectuosas**
+n <- 25; p <- 0.1
+
+probabilidades <- dbinom(0:n, n, p)
+probabilidad_acumulada <- pbinom(4, n, p)
+
+plot_distribution(0:n, probabilidades,
+                  "Distribución Binomial - P(X <= 4)",
+                  highlight = 0:4,
+                  label = sprintf("P(X <= 4) = %.5f", probabilidad_acumulada))
+
+cat(sprintf("La probabilidad de que en una muestra de 25 piezas se encuentren a lo sumo 4 defectuosas es: %.5f\n",
+            probabilidad_acumulada))
+```
+
+**Ejemplo 3 (del PDF):** El 60% de los Psicólogos de una facultad encuentran trabajo el primer año después de acabar la carrera. De los 100 Psicólogos en un curso, ¿Cuántos se espera que se coloque en el primer año? ¿Cuál es la varianza?
+
+```r
+# @title **Ejemplo 3. Número esperado de psicólogos que encuentran trabajo**
+n <- 100; p <- 0.6
+
+esperanza_binom <- n * p
+varianza_binom  <- n * p * (1 - p)
+
+cat(sprintf("Se espera que %.0f psicólogos encuentren trabajo en el primer año.\n", esperanza_binom))
+cat(sprintf("La varianza es: %.2f\n", varianza_binom))
+```
+
+**Ejemplo 4 (del PDF):** Suponiendo que el 40% de los Comunicadores Sociales tengan Rh-, si tomamos una muestra de siete Comunicadores Sociales, (a) ¿Qué probabilidad hay de que todas sean Rh-? (b) ¿Y de que máximo cuatro sean Rh-? Haz un gráfico y sombrea P(X <= 4) cada rectángulo con rojo y dentro del gráfico coloca P(X <= 4) y en otro gráfico sombrea P(X = 7).
+
+```r
+# @title **Ejemplo 4. Probabilidades con Rh-**
+n <- 7; p <- 0.4
+
+# (a) Probabilidad de que todas sean Rh-
+prob_todas_rh_neg <- dbinom(n, n, p)
+cat(sprintf("Probabilidad de que todas sean Rh-: P(X = 7) = %.5f\n", prob_todas_rh_neg))
+
+plot_distribution(0:n, dbinom(0:n, n, p),
+                  "Distribución Binomial - P(X = 7)",
+                  highlight = 7,
+                  label = sprintf("P(X = 7) = %.5f", prob_todas_rh_neg))
+
+# (b) Probabilidad de que máximo cuatro sean Rh-
+prob_maximo_cuatro <- pbinom(4, n, p)
+cat(sprintf("Probabilidad de que máximo cuatro sean Rh-: P(X <= 4) = %.5f\n", prob_maximo_cuatro))
+
+plot_distribution(0:n, dbinom(0:n, n, p),
+                  "Distribución Binomial - P(X <= 4)",
+                  highlight = 0:4,
+                  label = sprintf("P(X <= 4) = %.5f", prob_maximo_cuatro))
+```
+
+**Ejemplo 5 (del PDF):** Un laboratorio ha comprobado que el 25% de los que toman un determinado antibiótico sufren efectos secundarios. De una muestra de ocho enfermos que toman dicho antibiótico, halla la probabilidad de que sufran efectos secundarios al menos tres.
+
+```r
+# @title **Ejemplo 5. Probabilidad de al menos 3 efectos secundarios**
+p <- 0.25; n <- 8
+
+# P(X >= 3) = 1 - P(X < 3) = 1 - P(X <= 2)
+prob_al_menos_tres <- 1 - pbinom(2, n, p)
+cat(sprintf("La probabilidad de que al menos tres enfermos sufran efectos secundarios es: %.5f\n",
+            prob_al_menos_tres))
+
+plot_distribution(0:n, dbinom(0:n, n, p),
+                  "Distribución Binomial - P(X >= 3)",
+                  highlight = 3:n,
+                  label = sprintf("P(X >= 3) = %.5f", prob_al_menos_tres))
+```
+
+**Ejemplo 6 (del PDF):** Un laboratorio ha comprobado que el 25% de los que toman un determinado antibiótico sufren efectos secundarios. De una muestra de ocho enfermos que toman dicho antibiótico, halla la probabilidad de que sufran efectos secundarios menos de 3.
+
+```r
+# @title **Ejemplo 6. Probabilidad de menos de 3 efectos secundarios**
+p <- 0.25; n <- 8
+
+# P(X < 3) = P(X <= 2)
+prob_menos_de_tres <- pbinom(2, n, p)
+cat(sprintf("La probabilidad de que menos de 3 enfermos sufran efectos secundarios es: %.5f\n",
+            prob_menos_de_tres))
+
+plot_distribution(0:n, dbinom(0:n, n, p),
+                  "Distribución Binomial - P(X < 3)",
+                  highlight = 0:2,
+                  label = sprintf("P(X < 3) = %.5f", prob_menos_de_tres))
+```
+
+---
+
+#### **3.3. Distribución Binomial Negativa**
+
+**Definición:** Modela el número de ensayos de Bernoulli necesarios para obtener un número fijo de éxitos (*r*).
+
+- **Función de Probabilidad:** $P(X=k) = \binom{k-1}{r-1} p^r (1-p)^{k-r}$, para $k = r, r+1, \dots$
+- **Media (Esperanza):** $E(X) = r / p$
+- **Varianza:** $Var(X) = r(1-p) / p^2$
+
+> **Nota de R:** `dnbinom(x, size=r, prob=p)` devuelve la probabilidad de obtener **x fracasos** antes del r-ésimo éxito (misma convención que `scipy.stats.nbinom`).
+
+**Ejemplo 1 (del PDF):** ¿Cuál es la probabilidad de obtener 5 éxitos antes de 3 fracasos si la probabilidad de éxito es p = 0.7?
+
+```r
+# @title **Ejemplo 1. Probabilidad de 5 éxitos antes de 3 fracasos**
+r <- 5     # Número de éxitos
+p <- 0.7   # Probabilidad de éxito
+k <- 3     # Número de fracasos antes de obtener 5 éxitos
+
+prob_nbinom_1 <- dnbinom(k, size = r, prob = p)
+cat(sprintf("Probabilidad de obtener 5 éxitos antes de 3 fracasos: P(X=5) = %.5f\n",
+            prob_nbinom_1))
+
+# Momentos
+esperanza_nbinom  <- r * (1 - p) / p
+varianza_nbinom   <- r * (1 - p) / (p^2)
+desviacion_nbinom <- sqrt(varianza_nbinom)
+
+cat("\nMomentos en el Modelo Binomial Negativo\n")
+cat(sprintf("Esperanza: E(X) = %.2f\n", esperanza_nbinom))
+cat(sprintf("Varianza: V(X) = %.2f\n", varianza_nbinom))
+cat(sprintf("Desviación estándar: %.2f\n", desviacion_nbinom))
+```
+
+**Ejemplo 2 (del PDF):** La probabilidad de un niño expuesto al COVID-19 se contagie es de 0.6. ¿Cuál es la probabilidad de que el 10° niño expuesto sea el tercero en contraerla?
+
+```r
+# @title **Ejemplo 2. Probabilidad de que el 10° niño sea el tercero en contagiarse**
+n <- 10; r <- 3; p <- 0.6
+k <- n - r  # Número de fracasos antes de obtener 3 éxitos
+
+prob_nbinom_2 <- dnbinom(k, size = r, prob = p)
+cat(sprintf("Probabilidad de que el 10° niño sea el tercero en contagiarse: %.5f\n",
+            prob_nbinom_2))
+```
+
+---
+
+#### **3.4. Distribución de Poisson**
+
+**Definición:** Modela el número de eventos que ocurren en un intervalo de tiempo o espacio, dado un promedio de ocurrencia ($\lambda$).
+
+- **Función de Probabilidad:** $P(X=k) = \frac{\lambda^k e^{-\lambda}}{k!}$, para $k = 0, 1, 2, \dots$
+- **Media (Esperanza):** $E(X) = \lambda$
+- **Varianza:** $Var(X) = \lambda$
+
+**Ejemplo 1 (del PDF):** Una central telefónica recibe en promedio 2 llamadas por minuto. ¿Cuál es la probabilidad de que en un minuto se reciban exactamente 3 llamadas?
+
+```r
+# @title **Ejemplo 1. Probabilidad de recibir exactamente 3 llamadas**
+lambda_poisson <- 2
+k <- 3
+
+prob_poisson_1 <- dpois(k, lambda_poisson)
+cat(sprintf("Probabilidad de recibir exactamente 3 llamadas: P(X=3) = %.5f\n", prob_poisson_1))
+
+plot_distribution(0:14, dpois(0:14, lambda_poisson),
+                  "Distribución de Poisson - P(X=3)",
+                  highlight = k,
+                  label = sprintf("P(X=3) = %.5f", prob_poisson_1))
+```
+
+**Ejemplo 2 (del PDF):** En la zona que rodea un punto kilométrico de una autovía hay una población de erizos. Se ha realizado un estudio por el que se ha deducido que los erizos cruzan la autovía a razón de 4 cada 30 minutos. La probabilidad de que 6 o más erizos crucen la autovía en una hora es: Dibuja la distribución de Poisson y sombrea el rectángulo con P(X>=6).
+
+```r
+# @title **Ejemplo 2. Probabilidad de 6 o más erizos en una hora**
+lambda_poisson <- 8  # 4 erizos/30 min * 2 = 8 por hora
+prob_6_o_mas <- 1 - ppois(5, lambda_poisson)  # P(X >= 6)
+
+cat(sprintf("La probabilidad de que 6 o más erizos crucen la autovía en una hora es: %.5f\n",
+            prob_6_o_mas))
+
+plot_distribution(0:19, dpois(0:19, lambda_poisson),
+                  "Distribución de Poisson - P(X >= 6)",
+                  highlight = 6:19,
+                  label = sprintf("P(X >= 6) = %.5f", prob_6_o_mas))
+```
+
+**Ejemplo 3 (del PDF):** En una carretera se producen un promedio de 2 accidentes anuales. Calcula la probabilidad de que estos cinco años se produzcan más de 3 accidentes.
+
+```r
+# @title **Ejemplo 3. Probabilidad de más de 3 accidentes en 5 años**
+lambda_5_years <- 2 * 5
+
+prob_mas_de_3 <- 1 - ppois(3, lambda_5_years)  # P(X > 3)
+cat(sprintf("La probabilidad de que en 5 años se produzcan más de 3 accidentes es: %.5f\n",
+            prob_mas_de_3))
+
+plot_distribution(0:24, dpois(0:24, lambda_5_years),
+                  "Distribución de Poisson - P(X > 3) en 5 años",
+                  highlight = 4:24,
+                  label = sprintf("P(X > 3) = %.5f", prob_mas_de_3))
+```
+
+**Ejemplo 4 (del PDF):** En la hora punta de la mañana en un semáforo pasan una media de 10 coches por minuto. ¿Cuál es la probabilidad de que pasen exactamente 16 coches en 2 minutos?
+
+```r
+# @title **Ejemplo 4. Probabilidad de 16 coches en 2 minutos**
+lambda_poisson <- 10 * 2
+k <- 16
+
+prob_poisson <- dpois(k, lambda_poisson)
+cat(sprintf("La probabilidad de que pasen exactamente 16 coches en 2 minutos es: %.5f\n",
+            prob_poisson))
+
+plot_distribution(0:39, dpois(0:39, lambda_poisson),
+                  "Distribución de Poisson - P(X=16)",
+                  highlight = k,
+                  label = sprintf("P(X=16) = %.5f", prob_poisson))
+```
+
+**Ejemplo 5 (del PDF):** Si un banco recibe en promedio 6 cheques sin fondo por día, ¿cuáles son las probabilidades de que reciba: a. cuatro cheques sin fondo en un día dado, b. cincuenta cheques sin fondo en una semana, c. diez cheques sin fondo en 12 horas, d. 5 cheques sin fondos en 4 horas?
+
+```r
+# @title **Ejemplo 5. Probabilidades con cheques sin fondo**
+lambda_dia <- 6
+
+# a. Cuatro cheques sin fondo en un día dado
+prob_a <- dpois(4, lambda_dia)
+cat(sprintf("a. Probabilidad de 4 cheques sin fondo en un día: %.5f\n", prob_a))
+plot_distribution(0:14, dpois(0:14, lambda_dia),
+                  "Poisson - P(X=4) en un día",
+                  highlight = 4,
+                  label = sprintf("P(X=4) = %.5f", prob_a))
+
+# b. Cincuenta cheques sin fondo en una semana
+lambda_semana <- lambda_dia * 7
+prob_b <- dpois(50, lambda_semana)
+cat(sprintf("b. Probabilidad de 50 cheques sin fondo en una semana: %.5f\n", prob_b))
+plot_distribution(0:69, dpois(0:69, lambda_semana),
+                  "Poisson - P(X=50) en una semana",
+                  highlight = 50,
+                  label = sprintf("P(X=50) = %.5f", prob_b))
+
+# c. Diez cheques sin fondo en 12 horas
+lambda_12horas <- lambda_dia * 0.5
+prob_c <- dpois(10, lambda_12horas)
+cat(sprintf("c. Probabilidad de 10 cheques sin fondo en 12 horas: %.5f\n", prob_c))
+plot_distribution(0:19, dpois(0:19, lambda_12horas),
+                  "Poisson - P(X=10) en 12 horas",
+                  highlight = 10,
+                  label = sprintf("P(X=10) = %.5f", prob_c))
+
+# d. 5 cheques sin fondos en 4 horas
+lambda_4horas <- lambda_dia * (4/24)
+prob_d <- dpois(5, lambda_4horas)
+cat(sprintf("d. Probabilidad de 5 cheques sin fondo en 4 horas: %.5f\n", prob_d))
+plot_distribution(0:14, dpois(0:14, lambda_4horas),
+                  "Poisson - P(X=5) en 4 horas",
+                  highlight = 5,
+                  label = sprintf("P(X=5) = %.5f", prob_d))
+```
+
+**Ejemplo 6 (del PDF):** En una empresa el término medio de accidentes es de 5 por mes. Calcular la probabilidad de que como mínimo ocurran 2 accidentes en un mes.
+
+```r
+# @title **Ejemplo 6. Probabilidad de al menos 2 accidentes en un mes**
+lambda_poisson <- 5
+
+# P(X >= 2) = 1 - P(X <= 1)
+prob_al_menos_2 <- 1 - ppois(1, lambda_poisson)
+cat(sprintf("La probabilidad de que ocurran como mínimo 2 accidentes en un mes es: %.5f\n",
+            prob_al_menos_2))
+
+plot_distribution(0:14, dpois(0:14, lambda_poisson),
+                  "Poisson - P(X >= 2) accidentes/mes",
+                  highlight = 2:14,
+                  label = sprintf("P(X >= 2) = %.5f", prob_al_menos_2))
+```
+
+**Ejemplo 7 (del PDF):** En una empresa el término medio de accidentes es de 5 por mes. Calcular la probabilidad de que ocurran 8 accidentes en un trimestre.
+
+```r
+# @title **Ejemplo 7. Probabilidad de 8 accidentes en un trimestre**
+lambda_trimestre <- 5 * 3
+k <- 8
+
+prob_poisson_8 <- dpois(k, lambda_trimestre)
+cat(sprintf("La probabilidad de que ocurran 8 accidentes en un trimestre es: %.5f\n",
+            prob_poisson_8))
+
+plot_distribution(0:24, dpois(0:24, lambda_trimestre),
+                  "Poisson - P(X=8) en un trimestre",
+                  highlight = k,
+                  label = sprintf("P(X=8) = %.5f", prob_poisson_8))
+```
+
+---
+
+#### **3.5. Distribución Hipergeométrica**
+
+**Definición:** Modela el número de éxitos en una muestra de tamaño *n*, extraída **sin reemplazo** de una población finita de tamaño *N*, que contiene *K* éxitos.
+
+- **Función de Probabilidad:** $P(X=k) = \frac{\binom{K}{k} \binom{N-K}{n-k}}{\binom{N}{n}}$
+- **Media (Esperanza):** $E(X) = n \cdot \frac{K}{N}$
+- **Varianza:** $Var(X) = n \cdot \frac{K}{N} \cdot \left(1 - \frac{K}{N}\right) \cdot \frac{N-n}{N-1}$
+
+> **Nota de R:** `dhyper(x, m=K, n=N-K, k=n)` — cuidado con los nombres de los argumentos (`m` = éxitos en la población, `n` = fracasos en la población, `k` = tamaño de la muestra).
+
+**Ejemplo 1 (del PDF):** Una urna contiene 10 bolas rojas y 20 bolas azules. Se seleccionan 5 bolas sin reemplazo. ¿Cuál es la probabilidad de seleccionar exactamente 3 bolas rojas?
+
+```r
+# @title **Ejemplo 1. Probabilidad de seleccionar exactamente 3 bolas rojas**
+N <- 30   # Población total
+K <- 10   # Éxitos en la población (bolas rojas)
+n <- 5    # Tamaño de la muestra
+k <- 3    # Éxitos en la muestra
+
+prob_hyper_1 <- dhyper(k, m = K, n = N - K, k = n)
+cat(sprintf("Probabilidad de seleccionar exactamente 3 bolas rojas: P(X=3) = %.5f\n",
+            prob_hyper_1))
+
+# Momentos
+esperanza_hyper  <- n * (K / N)
+varianza_hyper   <- n * (K/N) * (1 - K/N) * ((N - n) / (N - 1))
+desviacion_hyper <- sqrt(varianza_hyper)
+
+cat("\nMomentos en el Modelo Hipergeométrico\n")
+cat(sprintf("Esperanza: E(X) = %.2f\n", esperanza_hyper))
+cat(sprintf("Varianza: V(X) = %.2f\n", varianza_hyper))
+cat(sprintf("Desviación estándar: %.2f\n", desviacion_hyper))
+
+plot_distribution(0:n, dhyper(0:n, m = K, n = N - K, k = n),
+                  "Distribución Hipergeométrica - P(X=3)",
+                  highlight = k,
+                  label = sprintf("P(X=3) = %.5f", prob_hyper_1))
+```
+
+---
+
+### **Parte 4: Ejercicios Propuestos**
+
+Resuelve los siguientes problemas utilizando el código que has aprendido. Para cada uno, calcula la probabilidad y grafica la distribución.
+
+1.  **Binomial:** Un estudiante responde un examen de 15 preguntas de opción múltiple (4 opciones cada una) al azar. ¿Cuál es la probabilidad de que acierte exactamente 6 preguntas? ¿Y de que acierte 5 o menos?
+2.  **Poisson:** En un sitio web, se reciben en promedio 3 visitas por minuto. ¿Cuál es la probabilidad de recibir exactamente 5 visitas en un minuto? ¿Y de recibir 2 o menos?
+3.  **Hipergeométrica:** Un lote de 50 piezas contiene 10 defectuosas. Se seleccionan 8 piezas al azar sin reemplazo. ¿Cuál es la probabilidad de encontrar exactamente 2 defectuosas en la muestra?
+4.  **Binomial Negativa:** Una máquina produce piezas con una probabilidad de defecto del 5%. ¿Cuál es la probabilidad de que la tercera pieza defectuosa sea la décima producida?
+
+**Solución Ejercicio 1 (Binomial):**
+
+```r
+# @title **Ejercicio 1. Examen de 15 preguntas al azar**
+n <- 15; p <- 1/4
+
+prob_6 <- dbinom(6, n, p)
+prob_5_o_menos <- pbinom(5, n, p)
+
+cat(sprintf("P(X = 6) = %.5f\n", prob_6))
+cat(sprintf("P(X <= 5) = %.5f\n", prob_5_o_menos))
+
+plot_distribution(0:n, dbinom(0:n, n, p),
+                  "Binomial - Examen (n=15, p=0.25)",
+                  highlight = 6,
+                  label = sprintf("P(X=6)=%.5f", prob_6))
+```
+
+**Solución Ejercicio 2 (Poisson):**
+
+```r
+# @title **Ejercicio 2. Visitas por minuto en un sitio web**
+lambda <- 3
+
+prob_5 <- dpois(5, lambda)
+prob_2_o_menos <- ppois(2, lambda)
+
+cat(sprintf("P(X = 5) = %.5f\n", prob_5))
+cat(sprintf("P(X <= 2) = %.5f\n", prob_2_o_menos))
+
+plot_distribution(0:14, dpois(0:14, lambda),
+                  "Poisson - Visitas por minuto (λ=3)",
+                  highlight = 5,
+                  label = sprintf("P(X=5)=%.5f", prob_5))
+```
+
+**Solución Ejercicio 3 (Hipergeométrica):**
+
+```r
+# @title **Ejercicio 3. Piezas defectuosas en un lote**
+N <- 50; K <- 10; n <- 8; k <- 2
+
+prob_2_defectuosas <- dhyper(k, m = K, n = N - K, k = n)
+cat(sprintf("P(X = 2 defectuosas) = %.5f\n", prob_2_defectuosas))
+
+plot_distribution(0:n, dhyper(0:n, m = K, n = N - K, k = n),
+                  "Hipergeométrica - 2 defectuosas en muestra de 8",
+                  highlight = k,
+                  label = sprintf("P(X=2) = %.5f", prob_2_defectuosas))
+```
+
+**Solución Ejercicio 4 (Binomial Negativa):**
+
+```r
+# @title **Ejercicio 4. Tercera pieza defectuosa en la décima producida**
+r <- 3       # 3 defectuosas (éxitos)
+p <- 0.05    # Probabilidad de defecto
+k <- 10 - 3  # Fracasos antes del 3er éxito
+
+prob_3ra_defectuosa <- dnbinom(k, size = r, prob = p)
+cat(sprintf("P(la 3ª defectuosa sea la 10ª pieza) = %.5f\n", prob_3ra_defectuosa))
+
+plot_distribution(0:60 + r, dnbinom(0:60, size = r, prob = p),
+                  "Binomial Negativa - Posición de la 3ª defectuosa (p=0.05)",
+                  highlight = 10,
+                  label = sprintf("P(X=10) = %.5f", prob_3ra_defectuosa))
+```
+
+---
+
+**Entregable:**
+Comparte tu script de R (`.R`) o tu cuaderno de Google Colab con kernel de R con los ejercicios resueltos y sus respectivas gráficas.
