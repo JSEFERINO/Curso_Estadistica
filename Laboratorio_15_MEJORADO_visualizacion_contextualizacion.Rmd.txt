@@ -1,0 +1,975 @@
+====================================================================================================================
+PASO 0: El En cabezado del Laboratorio Final 
+
+===============Inicia tu copia aqui=================================================================================
+
+---
+title: "Laboratorio 15: Modelos Probabilísticos Continuos"
+author: "Julio Hurtado"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: false
+    df_print: paged
+    code_folding: show
+    self_contained: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    highlight: tango
+    theme: readable
+  header-includes:
+    - |
+      <style>
+      body { color: #263445; line-height: 1.68; font-size: 16px; }
+      .main-container { max-width: 1120px; }
+      h1, h2, h3, h4 { color: #17365D; font-weight: 700; }
+      h1 { border-bottom: 3px solid #2B78A5; padding-bottom: 12px; }
+      h2 { margin-top: 34px; padding: 12px 16px; background: #EDF4FA; border-left: 5px solid #2B78A5; border-radius: 5px; }
+      h3 { margin-top: 28px; color: #205A83; }
+      h4 { color: #287A70; }
+      p { margin: 12px 0; }
+      pre { border: 1px solid #D9E2EC; border-radius: 8px; background: #F7F9FC; }
+      code { color: #8B3152; }
+      table { margin: 18px 0; }
+      .figure { margin: 24px auto; padding: 12px; background: #FFFFFF; border: 1px solid #E1E8F0; border-radius: 10px; box-shadow: 0 2px 8px rgba(20,45,70,.06); }
+      .caption { color: #526579; font-style: italic; }
+      </style>
+---
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 1: Guía para ejecutar el laboratorio en Posit Cloud 
+
+===============Inicia tu copia aqui=================================================================================
+
+
+
+# **Laboratorio 15: Modelos Probabilísticos Continuos en Python y R**
+
+## **Guía para ejecutar el laboratorio en Posit Cloud**
+
+Este documento integra **R y Python en un mismo archivo R Markdown (`.Rmd`)**. R se ejecuta mediante `knitr` y Python mediante `reticulate`.
+
+### **1. Preparación inicial (una sola vez por proyecto)**
+
+El laboratorio utiliza un entorno Python propio llamado `lab15-python`. De esta manera, las librerías se instalan en el mismo intérprete que utilizarán los bloques Python.
+
+**Opción recomendada:** abre la pestaña **Console** de Posit Cloud y ejecuta este código una sola vez. No lo pegues dentro de un bloque Python. En este documento aparece como código de consulta (`eval=FALSE`), por lo que Knit no lo ejecutará.
+
+```{r, eval=FALSE}
+# ============================================================
+# INSTALADOR DEL LABORATORIO 15 - POSIT CLOUD
+# Ejecutar en Console de R, una sola vez por proyecto
+# ============================================================
+
+# 1. Instalar y cargar reticulate
+if (!requireNamespace("reticulate", quietly = TRUE)) {
+  install.packages("reticulate", repos = "https://cloud.r-project.org")
+}
+library(reticulate)
+
+# 2. Instalar Miniconda si no está disponible.
+# Comprobamos directamente si existe el ejecutable de Conda.
+conda_exe <- file.path(
+  reticulate::miniconda_path(),
+  if (.Platform$OS.type == "windows") "condabin/conda.bat" else "bin/conda"
+)
+
+if (!file.exists(conda_exe)) {
+  reticulate::install_miniconda(update = FALSE)
+}
+
+# 3. Crear un entorno dedicado con Python 3.11
+lab_env <- "lab15-python"
+
+if (!reticulate::condaenv_exists(lab_env)) {
+  reticulate::conda_create(
+    envname = lab_env,
+    packages = "python=3.11"
+  )
+}
+
+# 4. Instalar todas las librerías en ESE entorno
+reticulate::py_install(
+  packages = c(
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "seaborn",
+    "statsmodels",
+    "sympy"
+  ),
+  envname = lab_env,
+  method = "conda",
+  pip = TRUE
+)
+
+# 5. Instalar las librerías de R que utiliza el laboratorio
+paquetes_R <- c("ggplot2", "dplyr")
+faltantes_R <- paquetes_R[
+  !vapply(paquetes_R, requireNamespace, logical(1), quietly = TRUE)
+]
+
+if (length(faltantes_R) > 0) {
+  install.packages(faltantes_R, repos = "https://cloud.r-project.org")
+}
+
+# 6. Mostrar la ruta del Python configurado
+reticulate::use_condaenv(lab_env, required = TRUE)
+reticulate::py_config()
+
+cat("\\nInstalación finalizada. Reinicia R antes de generar el laboratorio.\\n")
+```
+
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 2: Configuración automática al procesar el documento 
+
+===============Inicia tu copia aqui=================================================================================
+
+
+
+
+### **2. Configuración automática al procesar el documento**
+
+El bloque `setup` que aparece a continuación es el **único bloque con esa etiqueta**. Comprueba el entorno, asegura que las librerías estén instaladas y configura `knitr`.
+
+Si el estudiante no ejecutó previamente el instalador de Console, el bloque intentará preparar el entorno durante el proceso de Knit. La primera generación puede tardar más.
+
+```{r setup, include=FALSE}
+# ============================================================
+# CONFIGURACIÓN DEL LABORATORIO 15 - POSIT CLOUD
+# No se inicializa Python hasta después de seleccionar el entorno.
+# ============================================================
+
+if (!requireNamespace("reticulate", quietly = TRUE)) {
+  install.packages("reticulate", repos = "https://cloud.r-project.org")
+}
+library(reticulate)
+
+# Comprobar si Miniconda ya está instalada,
+# comprobando directamente la existencia del ejecutable.
+conda_exe <- file.path(
+  reticulate::miniconda_path(),
+  if (.Platform$OS.type == "windows") "condabin/conda.bat" else "bin/conda"
+)
+
+if (!file.exists(conda_exe)) {
+  reticulate::install_miniconda(update = FALSE)
+}
+
+lab_env <- "lab15-python"
+
+# Crear el entorno solo si todavía no existe.
+if (!reticulate::condaenv_exists(lab_env)) {
+  reticulate::conda_create(
+    envname = lab_env,
+    packages = "python=3.11"
+  )
+}
+
+# Instalar las dependencias en el entorno seleccionado.
+reticulate::py_install(
+  packages = c(
+    "numpy", "scipy", "matplotlib", "pandas",
+    "seaborn", "statsmodels", "sympy"
+  ),
+  envname = lab_env,
+  method = "conda",
+  pip = TRUE
+)
+
+# Instalar paquetes de R si hacen falta.
+paquetes_R <- c("ggplot2", "dplyr")
+faltantes_R <- paquetes_R[
+  !vapply(paquetes_R, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(faltantes_R) > 0) {
+  install.packages(faltantes_R, repos = "https://cloud.r-project.org")
+}
+
+# MUY IMPORTANTE: seleccionar el entorno al final.
+# No ejecutar py_config(), py_run_string() ni importar Python antes de esto.
+reticulate::use_condaenv(lab_env, required = TRUE)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  comment = "#>",
+  fig.width = 8.5,
+  fig.height = 5.2,
+  fig.align = "center",
+  out.width = "92%",
+  dpi = 120
+)
+```
+
+
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 3: Configuración automática al procesar el documento 
+
+===============Inicia tu copia aqui=================================================================================
+
+
+### **3. Prueba de funcionamiento de Python**
+
+El siguiente bloque verifica las librerías fundamentales y genera una gráfica de la distribución normal estándar.
+
+```{python}
+import numpy as np
+import scipy
+import matplotlib
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+
+print("ENTORNO PYTHON LISTO PARA EL LABORATORIO")
+print("NumPy:", np.__version__)
+print("SciPy:", scipy.__version__)
+print("Matplotlib:", matplotlib.__version__)
+
+x = np.linspace(-4, 4, 400)
+plt.figure(figsize=(8, 4))
+plt.plot(x, norm.pdf(x), linewidth=2, label="N(0,1)")
+plt.title("Prueba de ejecución de Python")
+plt.xlabel("Valor z")
+plt.ylabel("Densidad")
+plt.grid(alpha=0.3)
+plt.legend()
+plt.show()
+```
+
+
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 4: Preparación del Entorno 
+
+===============Inicia tu copia aqui=================================================================================
+
+
+**Objetivo General:**
+Aprender a utilizar Python (NumPy, SciPy, Matplotlib) y R (funciones base y `ggplot2`) para modelar, calcular y graficar las distribuciones de probabilidad continuas más importantes: Normal, T de Student, Chi Cuadrado y F de Fisher. Adicionalmente, resolver los problemas de inferencia (tipificación, intervalos de confianza y tamaños de muestra) del anexo PDF en ambos lenguajes.
+
+**Herramientas a Utilizar:**
+- Python en Posit Cloud: `reticulate`, `numpy`, `scipy`, `matplotlib`, `pandas`, `seaborn`, `statsmodels`, `sympy`
+- R en Posit Cloud: `ggplot2`, `dplyr`
+
+---
+
+## **Parte 1: Preparación del Entorno**
+
+Antes de comenzar, debemos importar/cargar las librerías que nos permitirán realizar los cálculos y las gráficas. Al igual que en los laboratorios de modelos discretos (Labs 13 y 14), el entorno debe quedar listo antes de ejecutar cualquier ejemplo.
+
+### **Python**
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm, t, chi2, f
+from scipy.integrate import quad
+
+print("¡Entorno Python listo para el laboratorio!")
+```
+
+### **R**
+```{r}
+# Si faltan estos paquetes, ejecutar una sola vez en Console:
+# install.packages(c("ggplot2", "dplyr"))
+library(ggplot2)
+library(dplyr)
+
+cat("¡Entorno R listo para el laboratorio!\n")
+```
+
+---
+
+## **Parte 2: Funciones de Ayuda para Graficar**
+
+Para no repetir código, crearemos una función que nos permita graficar cualquier distribución continua de manera sencilla. Esta función recibirá los valores del eje x, la densidad (eje y) y, opcionalmente, el rango a sombrear con su etiqueta. Es el equivalente continuo de `plot_distribution` usada en los laboratorios discretos.
+
+### Python
+```{python}
+# @title **A. Función para Graficar Distribuciones Continuas (Python)**
+def plot_continuous(dist_name, x, pdf, title, highlight_range=None,
+                    shade_color="#F4A261", label=None, xlim=None):
+    """
+    Grafica una densidad continua y resalta el intervalo de interés.
+    El sombreado representa probabilidad (área bajo la curva), no altura.
+    """
+    x = np.asarray(x)
+    pdf = np.asarray(pdf)
+    fig, ax = plt.subplots(figsize=(9, 4.8), constrained_layout=True)
+    ax.plot(x, pdf, color="#246A8D", linewidth=2.7,
+            label=f"Densidad {dist_name}")
+
+    if highlight_range is not None:
+        a, b = sorted(highlight_range)
+        mask = (x >= a) & (x <= b)
+        if np.any(mask):
+            ax.fill_between(x[mask], pdf[mask], 0, color=shade_color,
+                            alpha=0.48, label=f"Región [{a:.2f}, {b:.2f}]")
+            ax.axvline(a, color="#B45309", linestyle="--", linewidth=1.2)
+            ax.axvline(b, color="#B45309", linestyle="--", linewidth=1.2)
+
+    if label:
+        ax.text(0.98, 0.93, label, transform=ax.transAxes,
+                ha="right", va="top", fontsize=10.5, color="#174A35",
+                bbox=dict(boxstyle="round,pad=0.45", facecolor="white",
+                          edgecolor="#A7C7B7", alpha=0.95))
+
+    ax.set_title(title, fontsize=13, fontweight="bold", pad=12)
+    ax.set_xlabel("Valor de la variable aleatoria (x)")
+    ax.set_ylabel("Densidad de probabilidad f(x)")
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    ax.set_ylim(bottom=0)
+    ax.grid(True, linestyle=":", alpha=0.45)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.legend(frameon=False, loc="upper left")
+    plt.show()
+```
+
+### R
+```{r}
+# @title **A. Función para Graficar Distribuciones Continuas (R)**
+plot_continuous <- function(x, pdf, title, highlight_range = NULL,
+                            shade_color = "#F4A261", label = NULL) {
+  df <- data.frame(x = x, dens = pdf)
+  p <- ggplot(df, aes(x = x, y = dens)) +
+    geom_line(color = "#246A8D", linewidth = 1.15) +
+    labs(title = title,
+         subtitle = "El área sombreada representa la probabilidad del intervalo",
+         x = "Valor de la variable aleatoria (x)",
+         y = "Densidad de probabilidad f(x)") +
+    theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5, color = "#17365D"),
+      plot.subtitle = element_text(hjust = 0.5, color = "#526579"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "#E5EAF0"),
+      plot.background = element_rect(fill = "white", color = NA),
+      plot.margin = margin(12, 16, 12, 12)
+    ) +
+    expand_limits(y = 0)
+
+  if (!is.null(highlight_range)) {
+    limites <- sort(highlight_range)
+    df_high <- df %>% filter(x >= limites[1] & x <= limites[2])
+    if (nrow(df_high) > 0) {
+      p <- p +
+        geom_area(data = df_high, aes(x = x, y = dens),
+                  fill = shade_color, alpha = 0.48) +
+        geom_vline(xintercept = limites, color = "#B45309",
+                   linetype = "dashed", linewidth = 0.55)
+    }
+  }
+
+  if (!is.null(label)) {
+    x_pos <- if (!is.null(highlight_range)) mean(highlight_range) else median(x)
+    y_pos <- max(pdf) * 0.88
+    p <- p + annotate("label", x = x_pos, y = y_pos, label = label,
+                      size = 3.7, color = "#174A35",
+                      fill = "white", label.size = 0.25)
+  }
+  print(p)
+}
+```
+
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 5: Exploración de Modelos Probabilísticos Continuos - Distribución Normal
+
+===============Inicia tu copia aqui=================================================================================
+
+
+---
+
+
+## **5. Distribución Normal**
+
+**¿Cuándo tiene sentido usarla?** Es útil cuando la variable es continua y sus valores se concentran alrededor de un promedio, con una dispersión aproximadamente simétrica. La media y la desviación estándar deben expresarse en las mismas unidades de la variable.
+
+**Cómo leer sus probabilidades:** `cdf` / `pnorm` acumula el área desde la izquierda; para una cola derecha se calcula `1 - CDF`; para un intervalo se resta la acumulación del límite inferior a la del superior. La densidad no es por sí misma una probabilidad: la probabilidad corresponde al área bajo la curva.
+
+**Definición:** Modela variables continuas simétricas alrededor de la media $\mu$, con dispersión $\sigma$.
+
+- **Función de Densidad:** $f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
+- **Media:** $E(X) = \mu$  |  **Varianza:** $Var(X) = \sigma^2$
+
+---
+
+#### **Ejemplo 1: Salarios mensuales de recién graduados — N(1300, 600)**
+
+**Pregunta estadística:** ¿Qué proporción de graduados está por debajo de un umbral salarial, dentro de una franja o por encima de un valor alto?
+
+**Lectura de los parámetros:** μ = 1300 € representa el salario promedio del modelo; σ = 600 € mide la dispersión típica. Cada salario puede expresarse como distancia a la media en unidades de desviación estándar.
+
+**Contexto:** Los salarios mensuales de los recién graduados que acceden a su primer empleo se distribuyen según una ley normal de media 1300 € y desviación típica 600 €. Interesa calcular el porcentaje de graduados que cobran: **(a)** menos de 600 €, **(b)** entre 1000 y 1500 €, y **(c)** más de 2200 €. Este es un caso clásico de tipificación para usar la tabla N(0,1), que aquí resolveremos directamente con `norm.cdf` y `pnorm`.
+
+##### Python
+```{python}
+# @title **Normal Ejemplo 1. Salarios N(1300, 600)**
+mu, sigma = 1300, 600
+
+# a) P(X < 600)
+prob_a = norm.cdf(600, mu, sigma)
+print(f"a) P(X < 600) = {prob_a:.4f}  →  {prob_a*100:.2f}%")
+
+# b) P(1000 < X <= 1500)
+prob_b = norm.cdf(1500, mu, sigma) - norm.cdf(1000, mu, sigma)
+print(f"b) P(1000 < X <= 1500) = {prob_b:.4f}  →  {prob_b*100:.2f}%")
+
+# c) P(X > 2200)
+prob_c = 1 - norm.cdf(2200, mu, sigma)
+print(f"c) P(X > 2200) = {prob_c:.4f}  →  {prob_c*100:.2f}%")
+
+# Gráficas
+x = np.linspace(mu - 4*sigma, mu + 4*sigma, 1000)
+pdf = norm.pdf(x, mu, sigma)
+
+plot_continuous("Normal", x, pdf, f"Normal N({mu}, {sigma}) - P(X < 600)",
+                highlight_range=(mu-4*sigma, 600), label=f"P={prob_a:.4f}")
+plot_continuous("Normal", x, pdf, f"Normal N({mu}, {sigma}) - P(1000 < X ≤ 1500)",
+                highlight_range=(1000, 1500), label=f"P={prob_b:.4f}")
+plot_continuous("Normal", x, pdf, f"Normal N({mu}, {sigma}) - P(X > 2200)",
+                highlight_range=(2200, mu+4*sigma), label=f"P={prob_c:.4f}")
+```
+
+##### R
+```{r}
+# @title **Normal Ejemplo 1. Salarios N(1300, 600)**
+mu <- 1300; sigma <- 600
+
+prob_a <- pnorm(600, mu, sigma)
+cat(sprintf("a) P(X < 600) = %.4f  →  %.2f%%\n", prob_a, prob_a*100))
+
+prob_b <- pnorm(1500, mu, sigma) - pnorm(1000, mu, sigma)
+cat(sprintf("b) P(1000 < X <= 1500) = %.4f  →  %.2f%%\n", prob_b, prob_b*100))
+
+prob_c <- 1 - pnorm(2200, mu, sigma)
+cat(sprintf("c) P(X > 2200) = %.4f  →  %.2f%%\n", prob_c, prob_c*100))
+
+x <- seq(mu - 4*sigma, mu + 4*sigma, length.out = 1000)
+pdf <- dnorm(x, mu, sigma)
+
+plot_continuous(x, pdf, sprintf("Normal N(%d,%d) - P(X<600)", mu, sigma),
+                highlight_range = c(mu-4*sigma, 600),
+                label = sprintf("P=%.4f", prob_a))
+plot_continuous(x, pdf, sprintf("Normal N(%d,%d) - P(1000<X<=1500)", mu, sigma),
+                highlight_range = c(1000, 1500),
+                label = sprintf("P=%.4f", prob_b))
+plot_continuous(x, pdf, sprintf("Normal N(%d,%d) - P(X>2200)", mu, sigma),
+                highlight_range = c(2200, mu+4*sigma),
+                label = sprintf("P=%.4f", prob_c))
+```
+
+**Interpretación:** El 12,10% de los recién graduados cobra menos de 600 €; el 32,08% cobra entre 1000 y 1500 €; y el 6,68% cobra más de 2200 €. Las gráficas muestran las tres regiones sombreadas sobre la curva N(1300, 600).
+
+---
+
+#### **Ejemplo 2: Media y desviación típica desconocidas (tiempo de memorización)**
+
+**Estrategia:** no se conocen μ ni σ. Las dos probabilidades dadas se convierten en cuantiles de la normal estándar. Al resolver el sistema se estiman ambos parámetros y luego se sustituyen en las probabilidades originales para verificar que reproducen 0,75 y 0,05.
+
+**Contexto:** Se estima que el tiempo en horas para memorizar un tema de Historia de la Filosofía sigue una normal N(μ, σ) con ambos parámetros desconocidos. Se sabe que las tres cuartas partes de las estudiantes necesitan más de 3 horas ($P(X>3)=0.75$) y que el 5% necesita más de 6 horas ($P(X>6)=0.05$). A partir de estas dos ecuaciones se resuelve el sistema para μ y σ usando los cuantiles de la normal estándar ($z_{0.25}\approx -0.675$ y $z_{0.95}\approx 1.645$). Este ejemplo muestra cómo invertir la tipificación (`ppf`/`qnorm`) para estimar parámetros.
+
+##### Python
+```{python}
+# @title **Normal Ejemplo 2. Media y sigma desconocidos**
+z1 = norm.ppf(0.25)  # ≈ -0.6745
+z2 = norm.ppf(0.95)  # ≈ 1.6449
+print(f"z1 = {z1:.4f}, z2 = {z2:.4f}")
+
+# Sistema: 3 - mu = z1*sigma ; 6 - mu = z2*sigma
+# Restando: 3 = (z2 - z1)*sigma
+sigma_sol = 3 / (z2 - z1)
+mu_sol = 3 - z1 * sigma_sol
+print(f"μ = {mu_sol:.4f} horas, σ = {sigma_sol:.4f} horas")
+
+# Verificación
+print(f"P(X>3) = {1 - norm.cdf(3, mu_sol, sigma_sol):.4f}")
+print(f"P(X>6) = {1 - norm.cdf(6, mu_sol, sigma_sol):.4f}")
+```
+
+##### R
+```{r}
+# @title **Normal Ejemplo 2. Media y sigma desconocidos**
+z1 <- qnorm(0.25); z2 <- qnorm(0.95)
+cat(sprintf("z1 = %.4f, z2 = %.4f\n", z1, z2))
+
+sigma_sol <- 3 / (z2 - z1)
+mu_sol <- 3 - z1 * sigma_sol
+cat(sprintf("μ = %.4f horas, σ = %.4f horas\n", mu_sol, sigma_sol))
+cat(sprintf("P(X>3) = %.4f\n", 1 - pnorm(3, mu_sol, sigma_sol)))
+cat(sprintf("P(X>6) = %.4f\n", 1 - pnorm(6, mu_sol, sigma_sol)))
+```
+
+**Interpretación:** Resolviendo el sistema se obtiene μ ≈ 3,8728 h y σ ≈ 1,2931 h; la verificación reproduce las probabilidades del enunciado (0,75 y 0,05), validando los parámetros estimados.
+
+---
+
+#### **Ejemplo 3: Pesos de estudiantes varones — N(74, 6)**
+
+**Qué se aprende:** un mismo modelo responde preguntas diferentes. Un intervalo central se obtiene restando dos CDF; una cantidad esperada se aproxima multiplicando la probabilidad por el tamaño poblacional; y una probabilidad condicional se calcula como un cociente de probabilidades.
+
+**Contexto:** El peso de los estudiantes varones de 2º de Bachillerato se aproxima por una normal de media 74 kg y desviación típica 6 kg. Se pide: **(a)** el porcentaje con peso entre 68 y 80 kg; **(b)** estimar cuántos de los 1500 estudiantes que se presentaron a la EvAU pesan más de 80 kg; y **(c)** la probabilidad condicionada de que un estudiante que pesa más de 76 kg pese más de 86 kg ($P(X>86 \mid X>76)$). Este ejemplo combina probabilidad directa, estimación de frecuencias absolutas y probabilidad condicional.
+
+##### Python
+```{python}
+# @title **Normal Ejemplo 3. Pesos N(74, 6)**
+mu, sigma = 74, 6
+
+# a) P(68 < X <= 80)
+prob_a = norm.cdf(80, mu, sigma) - norm.cdf(68, mu, sigma)
+print(f"a) P(68 < X <= 80) = {prob_a:.4f}  →  {prob_a*100:.2f}%")
+
+# b) P(X > 80) y estimación en 1500
+prob_b = 1 - norm.cdf(80, mu, sigma)
+print(f"b) P(X > 80) = {prob_b:.4f}  →  {prob_b*100:.2f}%")
+print(f"   Estimación en 1500 estudiantes: {prob_b*1500:.2f} ≈ {round(prob_b*1500)}")
+
+# c) Probabilidad condicional P(X>86 | X>76)
+p_86 = 1 - norm.cdf(86, mu, sigma)
+p_76 = 1 - norm.cdf(76, mu, sigma)
+prob_c = p_86 / p_76
+print(f"c) P(X > 86 | X > 76) = {p_86:.4f} / {p_76:.4f} = {prob_c:.4f}")
+
+x = np.linspace(mu - 4*sigma, mu + 4*sigma, 1000)
+pdf = norm.pdf(x, mu, sigma)
+plot_continuous("Normal", x, pdf, "Normal N(74, 6) - P(68 < X ≤ 80)",
+                highlight_range=(68, 80), label=f"P={prob_a:.4f}")
+plot_continuous("Normal", x, pdf, "Normal N(74, 6) - P(X > 80)",
+                highlight_range=(80, mu+4*sigma), label=f"P={prob_b:.4f}")
+```
+
+##### R
+```{r}
+# @title **Normal Ejemplo 3. Pesos N(74, 6)**
+mu <- 74; sigma <- 6
+
+prob_a <- pnorm(80, mu, sigma) - pnorm(68, mu, sigma)
+cat(sprintf("a) P(68 < X <= 80) = %.4f  →  %.2f%%\n", prob_a, prob_a*100))
+
+prob_b <- 1 - pnorm(80, mu, sigma)
+cat(sprintf("b) P(X > 80) = %.4f  →  %.2f%%\n", prob_b, prob_b*100))
+cat(sprintf("   Estimación en 1500 estudiantes: %.2f ≈ %d\n",
+            prob_b*1500, round(prob_b*1500)))
+
+p_86 <- 1 - pnorm(86, mu, sigma)
+p_76 <- 1 - pnorm(76, mu, sigma)
+prob_c <- p_86 / p_76
+cat(sprintf("c) P(X > 86 | X > 76) = %.4f / %.4f = %.4f\n", p_86, p_76, prob_c))
+
+x <- seq(mu - 4*sigma, mu + 4*sigma, length.out = 1000)
+pdf <- dnorm(x, mu, sigma)
+plot_continuous(x, pdf, "Normal N(74,6) - P(68<X<=80)",
+                highlight_range = c(68, 80), label = sprintf("P=%.4f", prob_a))
+plot_continuous(x, pdf, "Normal N(74,6) - P(X>80)",
+                highlight_range = c(80, mu+4*sigma), label = sprintf("P=%.4f", prob_b))
+```
+
+**Interpretación:** El 68,26% de los estudiantes pesa entre 68 y 80 kg; el 15,87% pesa más de 80 kg (≈238 de 1500 estudiantes); y la probabilidad condicionada es ≈0,0615. Las gráficas muestran las regiones central y de cola derecha.
+
+
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 6: Exploración de Modelos Probabilísticos Continuos - Distribución  T de Student
+
+===============Inicia tu copia aqui=================================================================================
+
+
+---
+
+## **6. Distribución T de Student**
+
+**Conexión con la práctica:** cuando se estima la media poblacional y la desviación estándar poblacional es desconocida, se utiliza la desviación estándar muestral. Para una población normal, el estadístico estandarizado sigue una t de Student con n−1 grados de libertad.
+
+**Cómo interpretar el valor crítico:** en un intervalo bilateral del 95%, α = 0,05 se divide en dos colas de 0,025. El cuantil 0,975 marca el extremo superior y, por simetría, el intervalo central va de −t crítico a +t crítico.
+
+**Definición:** Distribución simétrica con colas más pesadas que la Normal; depende de los grados de libertad $\nu$. Es la base de los intervalos de confianza cuando la varianza poblacional es desconocida y el tamaño de muestra es pequeño.
+
+- **Media:** $E(X) = 0$ (para $\nu > 1$)  |  **Varianza:** $Var(X) = \nu/(\nu-2)$ (para $\nu > 2$)
+
+#### **Ejemplo: Valor crítico para IC al 95% con ν = 15**
+
+**Contexto:** Supongamos que se tiene una muestra pequeña (ν = n−1 = 15, es decir, n = 16) y se desea construir un intervalo de confianza al 95% para la media, con σ desconocida. Se necesita el valor crítico $t_{0.975, 15}$ que deja 2,5% en cada cola. Este ejemplo muestra cómo usar `t.ppf`/`qt` y cómo se ve el área central delimitada por ±t.
+
+##### Python
+```{python}
+# @title **T de Student - Ejemplo**
+nu = 15  # grados de libertad
+x = np.linspace(t.ppf(0.001, nu), t.ppf(0.999, nu), 1000)
+pdf = t.pdf(x, nu)
+
+# Valores críticos para IC al 95% (bilateral)
+alpha = 0.05
+t_crit = t.ppf(1 - alpha/2, nu)
+print(f"t crítico (ν={nu}, α=0.05 bilateral) = {t_crit:.4f}")
+print(f"P(|T| <= {t_crit:.4f}) = {1 - 2*t.sf(t_crit, nu):.4f}")
+
+plot_continuous("t-Student", x, pdf, f"Distribución t de Student (ν={nu})",
+                highlight_range=(-t_crit, t_crit),
+                label=f"IC 95%: t = ±{t_crit:.3f}")
+```
+
+##### R
+```{r}
+# @title **T de Student - Ejemplo**
+nu <- 15
+x <- seq(qt(0.001, nu), qt(0.999, nu), length.out = 1000)
+pdf <- dt(x, nu)
+
+alpha <- 0.05
+t_crit <- qt(1 - alpha/2, nu)
+cat(sprintf("t crítico (ν=%d, α=0.05 bilateral) = %.4f\n", nu, t_crit))
+cat(sprintf("P(|T| <= %.4f) = %.4f\n", t_crit, 1 - 2*pt(-t_crit, nu)))
+
+plot_continuous(x, pdf, sprintf("t de Student (ν=%d)", nu),
+                highlight_range = c(-t_crit, t_crit),
+                label = sprintf("IC 95%%: t = ±%.3f", t_crit))
+```
+
+**Interpretación:** Con ν=15, el valor crítico es $t \approx 2.131$, que es mayor que el 1.96 de la normal. Este mayor valor refleja las colas más pesadas de la t y la mayor incertidumbre al estimar σ con muestras pequeñas.
+
+---
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 7: Exploración de Modelos Probabilísticos Continuos -  Distribución Chi Cuadrado ($\chi^2$)
+
+===============Inicia tu copia aqui=================================================================================
+
+
+## **7. Distribución Chi Cuadrado ($\chi^2$)**
+
+**Conexión con la práctica:** aparece al estudiar la variabilidad de una población normal. En un intervalo para la varianza, los grados de libertad son n−1 y dos cuantiles delimitan la región central. Solo toma valores no negativos y su forma es asimétrica.
+
+**Cómo interpretar el gráfico:** la región central contiene 1−α de probabilidad; las dos colas suman α. Los límites no están a igual distancia del centro porque la distribución es asimétrica.
+
+**Definición:** Distribución de la suma de cuadrados de variables normales estándar independientes; parámetro: grados de libertad $\nu$. Es la base de los intervalos de confianza para la varianza y de las pruebas de bondad de ajuste.
+
+- **Media:** $E(X) = \nu$  |  **Varianza:** $Var(X) = 2\nu$
+
+#### **Ejemplo: Valores críticos para IC de varianza con ν = 10**
+
+**Contexto:** En inferencia sobre la varianza poblacional, el estadístico $(n-1)s^2/\sigma^2$ sigue una $\chi^2_{n-1}$. Con ν = 10 grados de libertad, para un IC bilateral al 95% se necesitan los cuantiles 0.025 y 0.975. Este ejemplo calcula ambos valores y sombrea la región central.
+
+##### Python
+```{python}
+# @title **Chi Cuadrado - Ejemplo**
+nu = 10
+x = np.linspace(0.01, chi2.ppf(0.999, nu), 1000)
+pdf = chi2.pdf(x, nu)
+
+# Valores críticos IC 95% bilateral para varianza
+alpha = 0.05
+chi2_inf = chi2.ppf(alpha/2, nu)
+chi2_sup = chi2.ppf(1 - alpha/2, nu)
+print(f"χ² crítico inferior (α/2=0.025, ν={nu}) = {chi2_inf:.4f}")
+print(f"χ² crítico superior (1-α/2=0.975, ν={nu}) = {chi2_sup:.4f}")
+
+plot_continuous("Chi-Cuadrado", x, pdf, f"Chi Cuadrado (ν={nu}) - IC 95%",
+                highlight_range=(chi2_inf, chi2_sup),
+                label=f"χ² ∈ [{chi2_inf:.2f}, {chi2_sup:.2f}]")
+```
+
+##### R
+```{r}
+# @title **Chi Cuadrado - Ejemplo**
+nu <- 10
+x <- seq(0.01, qchisq(0.999, nu), length.out = 1000)
+pdf <- dchisq(x, nu)
+
+alpha <- 0.05
+chi2_inf <- qchisq(alpha/2, nu)
+chi2_sup <- qchisq(1 - alpha/2, nu)
+cat(sprintf("χ² inferior = %.4f\n", chi2_inf))
+cat(sprintf("χ² superior = %.4f\n", chi2_sup))
+
+plot_continuous(x, pdf, sprintf("Chi Cuadrado (ν=%d) - IC 95%%", nu),
+                highlight_range = c(chi2_inf, chi2_sup),
+                label = sprintf("χ² ∈ [%.2f, %.2f]", chi2_inf, chi2_sup))
+```
+
+**Interpretación:** Con ν=10, los cuantiles son $\chi^2_{0.025}=3.247$ y $\chi^2_{0.975}=20.483$. La región central sombreada contiene el 95% de la probabilidad, y los valores extremos (colas) corresponden al 5% restante.
+
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 8: Exploración de Modelos Probabilísticos Continuos -  F de Fisher
+
+===============Inicia tu copia aqui=================================================================================
+
+
+
+
+### **8. Distribución F de Fisher**
+
+**Conexión con ANOVA:** la distribución F permite comparar la variabilidad explicada por las diferencias entre grupos con la variabilidad residual dentro de los grupos. Un estadístico F grande aporta evidencia contra la hipótesis de igualdad de medias, bajo los supuestos del modelo ANOVA.
+
+**Cómo interpretar la cola derecha:** con α = 0,05, el valor crítico deja el 5% de probabilidad a su derecha. Si el F observado supera ese umbral, se rechaza la hipótesis nula al nivel de significancia establecido.
+
+**Definición:** Razón de dos variables Chi Cuadrado independientes divididas por sus grados de libertad. Parámetros: $\nu_1$ (numerador), $\nu_2$ (denominador). Es la base del ANOVA y de la comparación de varianzas.
+
+- **Media:** $E(X) = \frac{\nu_2}{\nu_2 - 2}$ (para $\nu_2 > 2$)
+
+#### **Ejemplo: Valor crítico para ANOVA con ν1 = 5, ν2 = 20**
+
+**Contexto:** En un ANOVA de un factor con 5 grupos (ν1 = k−1 = 5) y 20 grados de libertad residuales (ν2 = N−k = 20), la prueba F al 5% requiere el cuantil 0.95 de la distribución F(5, 20). Este ejemplo calcula el valor crítico y sombrea la región de rechazo (cola derecha).
+
+##### Python
+```{python}
+# @title **F de Fisher - Ejemplo**
+nu1, nu2 = 5, 20
+x = np.linspace(0.01, f.ppf(0.999, nu1, nu2), 1000)
+pdf = f.pdf(x, nu1, nu2)
+
+alpha = 0.05
+f_crit = f.ppf(1 - alpha, nu1, nu2)
+print(f"F crítico (ν1={nu1}, ν2={nu2}, α=0.05) = {f_crit:.4f}")
+print(f"P(F <= {f_crit:.4f}) = {f.cdf(f_crit, nu1, nu2):.4f}")
+
+plot_continuous("F-Fisher", x, pdf, f"F de Fisher (ν1={nu1}, ν2={nu2})",
+                highlight_range=(f_crit, x[-1]),
+                label=f"P(F > {f_crit:.3f}) = 0.05")
+```
+
+##### R
+```{r}
+# @title **F de Fisher - Ejemplo**
+nu1 <- 5; nu2 <- 20
+x <- seq(0.01, qf(0.999, nu1, nu2), length.out = 1000)
+pdf <- df(x, nu1, nu2)
+
+alpha <- 0.05
+f_crit <- qf(1 - alpha, nu1, nu2)
+cat(sprintf("F crítico = %.4f\n", f_crit))
+
+plot_continuous(x, pdf, sprintf("F de Fisher (ν1=%d, ν2=%d)", nu1, nu2),
+                highlight_range = c(f_crit, max(x)),
+                label = sprintf("P(F > %.3f) = 0.05", f_crit))
+```
+
+**Interpretación:** Con ν1=5 y ν2=20, el valor crítico es $F_{0.95}=2.711$. Si el estadístico F del ANOVA supera este valor, se rechaza la hipótesis nula de igualdad de medias al 5% de significancia. La cola derecha sombreada representa la región de rechazo.
+
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 9: Intervalos de Confianza — Anexo PDF (Ejercicios 3, 4 y 6)
+
+===============Inicia tu copia aqui=================================================================================
+
+
+
+## **Parte 9: Intervalos de Confianza — Anexo PDF (Ejercicios 3, 4 y 6)**
+
+### Cómo se construye e interpreta un intervalo de confianza
+
+El procedimiento tiene cinco pasos: **1.** identificar si σ poblacional es conocida; **2.** seleccionar el cuantil según el nivel de confianza; **3.** calcular el error estándar σ/√n; **4.** obtener el margen de error E = valor crítico × error estándar; y **5.** construir x̄ ± E e interpretar los límites en las unidades originales.
+
+Un intervalo del 95% no significa que haya una probabilidad del 95% de que el parámetro fijo esté dentro de este intervalo particular. Significa que, bajo el procedimiento y sus supuestos, el 95% de los intervalos construidos con muestras repetidas contendría el verdadero parámetro.
+
+Los intervalos de confianza para la media con σ conocida se construyen como $\bar{x} \pm z_{\alpha/2}\cdot\frac{\sigma}{\sqrt{n}}$. Aquí se resuelven los tres ejercicios del anexo PDF en ambos lenguajes, contextualizando cada caso.
+
+---
+
+### **Ejercicio 3: Tiempo de espera en un establecimiento**
+
+**Descomposición del cálculo:** el error estándar mide la variabilidad esperada de las medias muestrales; el margen de error amplía y reduce la media muestral según el cuantil de confianza. Al aumentar n, el error estándar disminuye y el intervalo se estrecha.
+
+**Contexto:** El tiempo de espera para ser atendida en un establecimiento sigue una normal con μ desconocida y σ = 3 minutos. Se toma una muestra de n = 121 clientas con media $\bar{x} = 7$ minutos. Se pide un IC al 95% para μ. Como σ es conocida, se usa el cuantil normal $z_{0.975}=1.96$ y el error estándar $\sigma/\sqrt{n}$.
+
+##### Python
+```{python}
+# @title **IC Ejercicio 3. Tiempo de espera**
+sigma, n, x_bar = 3, 121, 7
+alpha = 0.05
+z = norm.ppf(1 - alpha/2)
+E = z * sigma / np.sqrt(n)
+IC = (x_bar - E, x_bar + E)
+print(f"z(α/2) = {z:.4f}")
+print(f"Error estándar = {sigma/np.sqrt(n):.4f}")
+print(f"IC 95% para μ: ({IC[0]:.4f}, {IC[1]:.4f})")
+```
+
+##### R
+```{r}
+# @title **IC Ejercicio 3. Tiempo de espera**
+sigma <- 3; n <- 121; x_bar <- 7
+alpha <- 0.05
+z <- qnorm(1 - alpha/2)
+E <- z * sigma / sqrt(n)
+IC <- c(x_bar - E, x_bar + E)
+cat(sprintf("z(α/2) = %.4f\n", z))
+cat(sprintf("IC 95%% para μ: (%.4f, %.4f)\n", IC[1], IC[2]))
+```
+
+**Interpretación:** El IC al 95% es (6,5; 7,5) minutos. Es decir, con 95% de confianza, el tiempo medio de espera poblacional está entre 6,5 y 7,5 minutos. El margen de error es de 0,5 minutos.
+
+---
+
+### **Ejercicio 4: Actividad deportiva de las adultas de una ciudad**
+
+**Dos preguntas diferentes:** primero se estima la media mediante un intervalo al 90%; después se despeja n en la fórmula del margen de error. El tamaño calculado debe redondearse hacia arriba, porque un tamaño menor no garantiza el error máximo solicitado.
+
+**Contexto:** El tiempo diario dedicado a actividad deportiva sigue una normal con μ desconocida y σ = 20 minutos. Con una muestra de n = 250 habitantes se obtuvo $\bar{x} = 90$ minutos. Se pide: **(a)** un IC al 90% para μ; y **(b)** el tamaño mínimo de muestra para que el error máximo sea menor que 1 minuto con el mismo nivel de confianza. Este ejercicio ilustra la relación inversa entre tamaño de muestra y margen de error.
+
+##### Python
+```{python}
+# @title **IC Ejercicio 4. Actividad deportiva**
+sigma, n, x_bar = 20, 250, 90
+
+# a) IC 90%
+z90 = norm.ppf(0.95)
+E90 = z90 * sigma / np.sqrt(n)
+IC90 = (x_bar - E90, x_bar + E90)
+print(f"a) z(0.95) = {z90:.4f}")
+print(f"   IC 90% para μ: ({IC90[0]:.4f}, {IC90[1]:.4f})")
+
+# b) Tamaño mínimo para E < 1
+n_min = (z90 * sigma / 1)**2
+print(f"b) n mínimo = ({z90:.4f}*{sigma}/1)² = {n_min:.2f}  →  n = {int(np.ceil(n_min))}")
+```
+
+##### R
+```{r}
+# @title **IC Ejercicio 4. Actividad deportiva**
+sigma <- 20; n <- 250; x_bar <- 90
+
+z90 <- qnorm(0.95)
+E90 <- z90 * sigma / sqrt(n)
+IC90 <- c(x_bar - E90, x_bar + E90)
+cat(sprintf("a) IC 90%% para μ: (%.4f, %.4f)\n", IC90[1], IC90[2]))
+
+n_min <- (z90 * sigma / 1)^2
+cat(sprintf("b) n mínimo = %.2f  →  n = %d\n", n_min, ceiling(n_min)))
+```
+
+**Interpretación:** (a) El IC al 90% es (87,92; 92,08) minutos, más estrecho que un IC al 95% porque se sacrifica confianza por precisión. (b) Para reducir el error a menos de 1 minuto se necesitan al menos 1083 habitantes, un aumento considerable respecto a los 250 iniciales.
+
+---
+
+### **Ejercicio 6: Tensión de ruptura de cables**
+
+**Idea clave:** mantener la misma amplitud significa conservar el mismo margen de error E. Al elevar la confianza del 95% al 99%, el valor crítico aumenta; para conservar E también debe aumentar el tamaño de muestra. El resultado final se redondea hacia arriba.
+
+**Contexto:** Las tensiones de ruptura de cables siguen una normal con μ desconocida y σ = 120 kg. En una muestra de n = 70 cables se obtuvo $\bar{x} = 2100$ kg. Se pide: **(a)** un IC al 95% para la tensión media; y **(b)** el tamaño de muestra necesario para obtener un IC al 99% con la misma amplitud que el anterior. Este ejercicio muestra cómo al aumentar el nivel de confianza (de 95% a 99%) se requiere más muestra para mantener la misma precisión.
+
+##### Python
+```{python}
+# @title **IC Ejercicio 6. Tensión de ruptura**
+sigma, n, x_bar = 120, 70, 2100
+
+# a) IC 95%
+z95 = norm.ppf(0.975)
+E95 = z95 * sigma / np.sqrt(n)
+IC95 = (x_bar - E95, x_bar + E95)
+print(f"a) IC 95% para μ: ({IC95[0]:.4f}, {IC95[1]:.4f})")
+
+# b) IC 99% con la misma amplitud (E = E95)
+z99 = norm.ppf(0.995)
+n_b = (z99 * sigma / E95)**2
+print(f"b) z(0.995) = {z99:.4f}, E = {E95:.4f}")
+print(f"   n = (z99*σ/E)² = {n_b:.2f}  →  n = {int(np.ceil(n_b))}")
+```
+
+##### R
+```{r}
+# @title **IC Ejercicio 6. Tensión de ruptura**
+sigma <- 120; n <- 70; x_bar <- 2100
+
+z95 <- qnorm(0.975)
+E95 <- z95 * sigma / sqrt(n)
+IC95 <- c(x_bar - E95, x_bar + E95)
+cat(sprintf("a) IC 95%% para μ: (%.4f, %.4f)\n", IC95[1], IC95[2]))
+
+z99 <- qnorm(0.995)
+n_b <- (z99 * sigma / E95)^2
+cat(sprintf("b) n = %.2f  →  n = %d\n", n_b, ceiling(n_b)))
+```
+
+**Interpretación:** (a) El IC al 95% es (2071,89; 2128,11) kg. (b) Para un IC al 99% con la misma amplitud (E ≈ 28,11 kg) se necesitan al menos 121 cables, casi el doble de la muestra original, porque $z_{0.995}=2.575$ es mayor que $z_{0.975}=1.96$.
+
+---
+
+===============Finaliza tu copia aqui======================================
+
+
+====================================================================================================================
+PASO 10: Evaluacion del Laboratorio 15 y 16
+
+===============Inicia tu copia aqui=================================================================================
+
+
+## **Parte 10: Evaluación interactiva del Laboratorio 15**
+
+### **Comprueba tus conocimientos sobre modelos probabilísticos continuos**
+
+Ha llegado el momento de poner en práctica lo aprendido. En esta evaluación interactiva encontrarás preguntas relacionadas con la distribución Normal, t de Student, Chi-cuadrado, F de Fisher y los intervalos de confianza.
+
+Responde cada pregunta con atención. Lee los enunciados, identifica el modelo estadístico correspondiente y utiliza los procedimientos desarrollados en este laboratorio para justificar tus respuestas.
+
+<div class="alert alert-info" role="alert" style="padding: 22px; border-left: 5px solid #2B78A5; border-radius: 9px; background-color: #EDF6FC; margin: 22px 0;">
+  <h3 style="margin-top: 0; color: #17365D;">📝 Evaluación del Laboratorio 15</h3>
+  <p style="font-size: 16px;">Accede al cuestionario interactivo y demuestra tu dominio de los modelos probabilísticos continuos.</p>
+  <p style="margin: 18px 0 8px 0;">
+    <a href="https://maestro-jseferino.netlify.app/evaluaciones-prob/laboratorio-15-modelos-probabilisticos%20-%20prueba%20-%20continuos/" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display: inline-block; padding: 12px 20px; color: #FFFFFF; background-color: #246A8D; border-radius: 6px; text-decoration: none; font-weight: 700;">
+      Iniciar evaluación interactiva →
+    </a>
+  </p>
+  <p style="font-size: 13px; color: #526579; margin-bottom: 0;">El cuestionario se abrirá en una nueva pestaña.</p>
+</div>
+
+**Recomendación:** realiza primero las actividades del laboratorio, revisa las interpretaciones y las gráficas, y luego presenta la evaluación de manera individual.
+
+---
+
+### **Resumen de Funciones Clave**
+
+| Distribución | Python (`scipy.stats`) | R |
+|---|---|---|
+| Normal | `norm.pdf/cdf/ppf` | `dnorm/pnorm/qnorm` |
+| T de Student | `t.pdf/cdf/ppf` | `dt/pt/qt` |
+| Chi Cuadrado | `chi2.pdf/cdf/ppf` | `dchisq/pchisq/qchisq` |
+| F de Fisher | `f.pdf/cdf/ppf` | `df/pf/qf` |
+| IC media (σ conocida) | `x̄ ± z * σ/√n` | `x̄ ± qnorm * σ/√n` |
+
+Con este laboratorio, tus estudiantes podrán transitar de los modelos discretos (Labs 13 y 14) a los continuos, cerrando el ciclo de inferencia estadística con aplicaciones reales de intervalos de confianza y tamaños de muestra en ambos lenguajes. Cada ejemplo está contextualizado con los datos del anexo PDF para que el estudiante vea la conexión directa entre la teoría, el código y la interpretación estadística.
+
+
